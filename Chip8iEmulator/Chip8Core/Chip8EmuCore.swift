@@ -19,7 +19,6 @@ class Chip8EmuCore: ObservableObject {
     
     public func emulate() async {
         // Set up render system and register input callbacks
-        setupGraphics();
         setupInput();
         
         let program = readProgramFromFile(fileName: "DisplayTest")
@@ -43,17 +42,13 @@ class Chip8EmuCore: ObservableObject {
         return Chip8Program(name: fileName, contentROM: romData)
     }
     
-    private func setupGraphics() {
-        
-    }
-    
     private func setupInput() {
         
     }
     
     private func showOutput() async {
         await MainActor.run {
-            outputScreen = system.OutputScreen
+            outputScreen = system.Output
         }
 
     }
@@ -81,5 +76,15 @@ class Chip8EmuCore: ObservableObject {
         0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
         0xF0, 0x80, 0xF0, 0x80, 0x80  // F
     ]
+}
+
+///
+/// Represents compiled program for Chip8 system. Compiled program binary data is saved in .ch8 files.
+///
+struct Chip8Program {
+    public static let fileExtension = "ch8"
     
+    public let name: String
+    /// Read Only Memory - ROM binary content of the compiled program
+    public let contentROM: [UByte]
 }

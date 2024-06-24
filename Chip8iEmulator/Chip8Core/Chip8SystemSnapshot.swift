@@ -1,5 +1,5 @@
 //
-//  Chip8SystemState.swift
+//  Chip8SystemSnapshot.swift
 //  Chip8iEmulator
 //
 //  Created by Danijel Stracenski on 24.06.2024..

@@ -14,29 +14,27 @@ public typealias UShort = UInt16
 /// Chip 8 System
 ///
 class Chip8System {
-    private var currentOperationCode: UShort
     /// 4096 bytes of memory. Chip8 uses BIG ENDIAN (when saving UShort value  we save upper byte at address x and then lower byte at memory address x+1)
-    private var randomAccessMemory: [UByte]
+    private(set) var randomAccessMemory: [UByte]
     
     /// 15 general purpose registers and 1 "carry-flag" register
-    private var registers: [UByte]
-    private var indexRegister: UShort
+    private(set) var registers: [UByte]
+    private(set) var indexRegister: UShort
     /// Program Counter - points to memory location of operation that will be executed next. Each operation takes 2 memory addresses so increment should be done by 2
-    private var pc: UShort
+    private(set) var pc: UShort
     
-    private var callStack: [UShort] // 16 levels // Saves Current ProgramCounter
-    private var callStackPointer: UShort // Remembers which level of stack is used
+    private(set) var callStack: [UShort] // 16 levels // Saves Current ProgramCounter
+    private(set) var callStackPointer: UShort // Remembers which level of stack is used
     
     // if set above 0 they are counting down. Counting at 60Hz
-    private var delayTimer: UByte
-    private var soundTimer: UByte // Buzzer when reaches zero
+    private(set) var delayTimer: UByte
+    private(set) var soundTimer: UByte // Buzzer when reaches zero
     
     /// One dimension Byte array representing output screen (64x32). One byte represents one pixel (0: Black and 255: White), order from left top of the screen.
-    public private(set) var OutputScreen: [UByte] // 64x32
-    private var inputKeys: [UByte] // 16 keys
+    private(set) var Output: [UByte] // 64x32
+    private(set) var InputKeys: [UByte] // 16 keys
     
     init(font: [UByte] = Chip8EmuCore.DefaultFontSet) {
-        self.currentOperationCode = 0
         self.randomAccessMemory = Array(repeating: 0, count: 4096)
         
         self.registers = Array(repeating: 0, count: 16)
@@ -49,33 +47,24 @@ class Chip8System {
         self.delayTimer = 0
         self.soundTimer = 0
         
-        self.OutputScreen = Array(repeating: 0, count: 64*32)
-        self.inputKeys = Array(repeating: 0, count: 16)
+        self.Output = Array(repeating: 0, count: 64*32)
+        self.InputKeys = Array(repeating: 0, count: 16)
         
         // Load font set
         self.randomAccessMemory.replaceSubrange(0...0x50, with: font)
     }
     
     public func loadProgram(_ programROM: [UByte]) {
-        // Load program rom into system ram at location 200
+        // Load program rom into system ram at location 0x200
         self.randomAccessMemory.replaceSubrange(0x200...(0x200+programROM.count), with: programROM)
-    }
-    
-    public enum Chip8Operation {
-        case ClearScreen
-        case Jump(location: UShort)
-        case SetValueToRegister(registerNumber: Int, value: UByte)
-        case AddValueToRegister(registerNumber: Int, value: UByte)
-        case SetValueToIndexRegister(value: UShort)
-        case DrawSprite(height: Int, locationX: Int, locationY: Int)
     }
     
     public func emulateCycle() async{
         // Fetch Opcode
         let opCode: UShort = fetchOperationCode(memoryLocation: pc)
-        
+
         // Decode Opcode
-        guard let operation = decodeOperationCode(opCode: opCode) else { return }
+        guard let operation = Chip8Operation.decode(operationCode: opCode) else { return }
         // Execute Opcode
         executeOperation(operation: operation)
         
@@ -87,39 +76,10 @@ class Chip8System {
 //        OutputScreen[i] = 1
     }
     
-    private func decodeOperationCode(opCode: UShort) -> Chip8Operation? {
-        switch (opCode & 0xF000) {
-        case 0x0000:
-            return .ClearScreen
-        case 0x1000: // 1NNN - jump (set PC to NNN)
-            let location = opCode & 0x0FFF
-            return .Jump(location: location)
-        case 0x6000: // 6XNN - set value NN to register X
-            let registerNumber = Int((opCode & 0x0F00) >> 8)
-            let value = UByte(opCode & 0x00FF)
-            return .SetValueToRegister(registerNumber: registerNumber, value: value)
-        case 0x7000: // 7XNN - add value NN to register X
-            let registerNumber = Int((opCode & 0x0F00) >> 8)
-            let value = UByte(opCode & 0x00FF)
-            return .AddValueToRegister(registerNumber: registerNumber, value: value)
-        case 0xA000: // ANNN - set value NNN to Index register
-            let value = UShort(opCode & 0x0FFF)
-            return .SetValueToIndexRegister(value: value)
-        case 0xD000: // DXYN - draws N pixels tall sprite from memory location that Index register has onto screen at location pX = value of X register, pY= value of Y register
-            let x = Int(registers[Int((opCode & 0x0F00) >> 8)])
-            let y = Int(registers[Int((opCode & 0x00F0) >> 4)])
-            let height = Int(opCode & 0x000F)
-            return .DrawSprite(height: height, locationX: x, locationY: y)
-        default:
-            print("Unknown operation code \(String(format:"%02X", opCode))")
-            return nil
-        }
-    }
-    
     private func executeOperation(operation: Chip8Operation) {
         switch operation {
         case .ClearScreen:
-            self.OutputScreen = Array(repeating: 0, count: 64*32)
+            self.Output = Array(repeating: 0, count: 64*32)
             self.pc += 2
             break
         case .Jump(let location):
@@ -137,7 +97,10 @@ class Chip8System {
             self.indexRegister = value
             self.pc += 2
             break
-        case .DrawSprite(let height, let locationX, let locationY):
+        case .DrawSprite(let height, let registerX, let registerY):
+            let locationX = Int(registers[registerX])
+            let locationY = Int(registers[registerY])
+            
             // TODO: Collision flag, pixel by pixel bit by bit.
             let spriteStartAddress = Int(self.indexRegister)
             let spriteEndAddress = spriteStartAddress + height // Chip8 Spite is always 8 pixels (8 bits in memory) wide. One memory address stores one row of sprite. So whole sprite is <height> bytes long
@@ -150,15 +113,15 @@ class Chip8System {
                     if locationX+i >= 64 {
                         break
                     }
-                    if locationX+i + (locationY+j)*64 >= OutputScreen.count {
+                    if locationX+i + (locationY+j)*64 >= Output.count {
                         continue
                     }
                     let spritePixel = (sprite[j] & UInt8(NSDecimalNumber(decimal: pow(2, (7-i))).intValue)) >> (7-i)
-                    let pixel = spritePixel == 0 ? OutputScreen[locationX+i + (locationY+j)*64] : OutputScreen[locationX+i + (locationY+j)*64] ^ spritePixel
+                    let pixel = spritePixel == 0 ? Output[locationX+i + (locationY+j)*64] : Output[locationX+i + (locationY+j)*64] ^ spritePixel
                     if pixel > 1 {
                         return
                     }
-                    OutputScreen[locationX+i + (locationY+j)*64] = pixel
+                    Output[locationX+i + (locationY+j)*64] = pixel
                 }
             }
             self.pc += 2
@@ -174,5 +137,11 @@ class Chip8System {
         let secondByte = randomAccessMemory[Int(memoryLocation + 1)]
         let opCode: UShort = (UShort(firstByte) << 8) | UShort(secondByte) // chip8 uses big endian
         return opCode
+    }
+    
+    public var UpcomingOperationCode: UShort {
+        get {
+            fetchOperationCode(memoryLocation: pc)
+        }
     }
 }

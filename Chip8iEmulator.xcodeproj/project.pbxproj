@@ -10,25 +10,17 @@
 		6937577D2C062127003A84E2 /* Chip8iEmulatorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6937577C2C062127003A84E2 /* Chip8iEmulatorApp.swift */; };
 		693757812C062128003A84E2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 693757802C062128003A84E2 /* Assets.xcassets */; };
 		693757852C062128003A84E2 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 693757842C062128003A84E2 /* Preview Assets.xcassets */; };
-		6937578F2C062128003A84E2 /* Chip8iEmulatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6937578E2C062128003A84E2 /* Chip8iEmulatorTests.swift */; };
-		693757992C062128003A84E2 /* Chip8iEmulatorUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 693757982C062128003A84E2 /* Chip8iEmulatorUITests.swift */; };
-		6937579B2C062128003A84E2 /* Chip8iEmulatorUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6937579A2C062128003A84E2 /* Chip8iEmulatorUITestsLaunchTests.swift */; };
+		6937578F2C062128003A84E2 /* Chip8SystemTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6937578E2C062128003A84E2 /* Chip8SystemTests.swift */; };
 		693757A82C0621C7003A84E2 /* Chip8EmuCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 693757A72C0621C7003A84E2 /* Chip8EmuCore.swift */; };
 		693757AB2C062289003A84E2 /* Chip8System.swift in Sources */ = {isa = PBXBuildFile; fileRef = 693757AA2C062289003A84E2 /* Chip8System.swift */; };
-		69E621982C164FB9009FE463 /* Chip8Program.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69E621972C164FB9009FE463 /* Chip8Program.swift */; };
+		699366172C28D92600114AE9 /* Chip8Operation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 699366162C28D92600114AE9 /* Chip8Operation.swift */; };
+		699366192C28E4D500114AE9 /* Chip8SystemSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 699366182C28E4D500114AE9 /* Chip8SystemSnapshot.swift */; };
 		69EB30982C1781B900B44961 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6937577E2C062127003A84E2 /* ContentView.swift */; };
 		69EB30A42C17974900B44961 /* DisplayTest.ch8 in Resources */ = {isa = PBXBuildFile; fileRef = 69EB30A32C17974900B44961 /* DisplayTest.ch8 */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
 		6937578B2C062128003A84E2 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 693757712C062127003A84E2 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 693757782C062127003A84E2;
-			remoteInfo = Chip8iEmulator;
-		};
-		693757952C062128003A84E2 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 693757712C062127003A84E2 /* Project object */;
 			proxyType = 1;
@@ -45,13 +37,11 @@
 		693757822C062128003A84E2 /* Chip8iEmulator.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Chip8iEmulator.entitlements; sourceTree = "<group>"; };
 		693757842C062128003A84E2 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		6937578A2C062128003A84E2 /* Chip8iEmulatorTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Chip8iEmulatorTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		6937578E2C062128003A84E2 /* Chip8iEmulatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chip8iEmulatorTests.swift; sourceTree = "<group>"; };
-		693757942C062128003A84E2 /* Chip8iEmulatorUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Chip8iEmulatorUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		693757982C062128003A84E2 /* Chip8iEmulatorUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chip8iEmulatorUITests.swift; sourceTree = "<group>"; };
-		6937579A2C062128003A84E2 /* Chip8iEmulatorUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chip8iEmulatorUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		6937578E2C062128003A84E2 /* Chip8SystemTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chip8SystemTests.swift; sourceTree = "<group>"; };
 		693757A72C0621C7003A84E2 /* Chip8EmuCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chip8EmuCore.swift; sourceTree = "<group>"; };
 		693757AA2C062289003A84E2 /* Chip8System.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chip8System.swift; sourceTree = "<group>"; };
-		69E621972C164FB9009FE463 /* Chip8Program.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chip8Program.swift; sourceTree = "<group>"; };
+		699366162C28D92600114AE9 /* Chip8Operation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chip8Operation.swift; sourceTree = "<group>"; };
+		699366182C28E4D500114AE9 /* Chip8SystemSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chip8SystemSnapshot.swift; sourceTree = "<group>"; };
 		69EB30A32C17974900B44961 /* DisplayTest.ch8 */ = {isa = PBXFileReference; lastKnownFileType = file; path = DisplayTest.ch8; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -70,13 +60,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		693757912C062128003A84E2 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -85,7 +68,6 @@
 			children = (
 				6937577B2C062127003A84E2 /* Chip8iEmulator */,
 				6937578D2C062128003A84E2 /* Chip8iEmulatorTests */,
-				693757972C062128003A84E2 /* Chip8iEmulatorUITests */,
 				6937577A2C062127003A84E2 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -95,7 +77,6 @@
 			children = (
 				693757792C062127003A84E2 /* Chip8iEmulator.app */,
 				6937578A2C062128003A84E2 /* Chip8iEmulatorTests.xctest */,
-				693757942C062128003A84E2 /* Chip8iEmulatorUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -125,18 +106,9 @@
 		6937578D2C062128003A84E2 /* Chip8iEmulatorTests */ = {
 			isa = PBXGroup;
 			children = (
-				6937578E2C062128003A84E2 /* Chip8iEmulatorTests.swift */,
+				6937578E2C062128003A84E2 /* Chip8SystemTests.swift */,
 			);
 			path = Chip8iEmulatorTests;
-			sourceTree = "<group>";
-		};
-		693757972C062128003A84E2 /* Chip8iEmulatorUITests */ = {
-			isa = PBXGroup;
-			children = (
-				693757982C062128003A84E2 /* Chip8iEmulatorUITests.swift */,
-				6937579A2C062128003A84E2 /* Chip8iEmulatorUITestsLaunchTests.swift */,
-			);
-			path = Chip8iEmulatorUITests;
 			sourceTree = "<group>";
 		};
 		693757A92C062251003A84E2 /* Chip8Core */ = {
@@ -144,7 +116,8 @@
 			children = (
 				693757A72C0621C7003A84E2 /* Chip8EmuCore.swift */,
 				693757AA2C062289003A84E2 /* Chip8System.swift */,
-				69E621972C164FB9009FE463 /* Chip8Program.swift */,
+				699366182C28E4D500114AE9 /* Chip8SystemSnapshot.swift */,
+				699366162C28D92600114AE9 /* Chip8Operation.swift */,
 			);
 			path = Chip8Core;
 			sourceTree = "<group>";
@@ -195,24 +168,6 @@
 			productReference = 6937578A2C062128003A84E2 /* Chip8iEmulatorTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		693757932C062128003A84E2 /* Chip8iEmulatorUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 693757A42C062128003A84E2 /* Build configuration list for PBXNativeTarget "Chip8iEmulatorUITests" */;
-			buildPhases = (
-				693757902C062128003A84E2 /* Sources */,
-				693757912C062128003A84E2 /* Frameworks */,
-				693757922C062128003A84E2 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				693757962C062128003A84E2 /* PBXTargetDependency */,
-			);
-			name = Chip8iEmulatorUITests;
-			productName = Chip8iEmulatorUITests;
-			productReference = 693757942C062128003A84E2 /* Chip8iEmulatorUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -227,10 +182,6 @@
 						CreatedOnToolsVersion = 15.0;
 					};
 					693757892C062128003A84E2 = {
-						CreatedOnToolsVersion = 15.0;
-						TestTargetID = 693757782C062127003A84E2;
-					};
-					693757932C062128003A84E2 = {
 						CreatedOnToolsVersion = 15.0;
 						TestTargetID = 693757782C062127003A84E2;
 					};
@@ -251,7 +202,6 @@
 			targets = (
 				693757782C062127003A84E2 /* Chip8iEmulator */,
 				693757892C062128003A84E2 /* Chip8iEmulatorTests */,
-				693757932C062128003A84E2 /* Chip8iEmulatorUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -274,13 +224,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		693757922C062128003A84E2 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -288,11 +231,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				699366172C28D92600114AE9 /* Chip8Operation.swift in Sources */,
 				693757AB2C062289003A84E2 /* Chip8System.swift in Sources */,
 				69EB30982C1781B900B44961 /* ContentView.swift in Sources */,
-				69E621982C164FB9009FE463 /* Chip8Program.swift in Sources */,
 				6937577D2C062127003A84E2 /* Chip8iEmulatorApp.swift in Sources */,
 				693757A82C0621C7003A84E2 /* Chip8EmuCore.swift in Sources */,
+				699366192C28E4D500114AE9 /* Chip8SystemSnapshot.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -300,16 +244,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6937578F2C062128003A84E2 /* Chip8iEmulatorTests.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		693757902C062128003A84E2 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				6937579B2C062128003A84E2 /* Chip8iEmulatorUITestsLaunchTests.swift in Sources */,
-				693757992C062128003A84E2 /* Chip8iEmulatorUITests.swift in Sources */,
+				6937578F2C062128003A84E2 /* Chip8SystemTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -320,11 +255,6 @@
 			isa = PBXTargetDependency;
 			target = 693757782C062127003A84E2 /* Chip8iEmulator */;
 			targetProxy = 6937578B2C062128003A84E2 /* PBXContainerItemProxy */;
-		};
-		693757962C062128003A84E2 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 693757782C062127003A84E2 /* Chip8iEmulator */;
-			targetProxy = 693757952C062128003A84E2 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -565,50 +495,6 @@
 			};
 			name = Release;
 		};
-		693757A52C062128003A84E2 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 86QW5F5W3D;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = stracenski.Chip8iEmulatorUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = Chip8iEmulator;
-			};
-			name = Debug;
-		};
-		693757A62C062128003A84E2 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 86QW5F5W3D;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = stracenski.Chip8iEmulatorUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = Chip8iEmulator;
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -635,15 +521,6 @@
 			buildConfigurations = (
 				693757A22C062128003A84E2 /* Debug */,
 				693757A32C062128003A84E2 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		693757A42C062128003A84E2 /* Build configuration list for PBXNativeTarget "Chip8iEmulatorUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				693757A52C062128003A84E2 /* Debug */,
-				693757A62C062128003A84E2 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
