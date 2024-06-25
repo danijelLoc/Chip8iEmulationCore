@@ -14,13 +14,13 @@ public typealias UShort = UInt16
 /// Chip 8 System
 ///
 class Chip8System {
-    /// 4096 bytes of memory. Chip8 uses BIG ENDIAN (when saving UShort value  we save upper byte at address x and then lower byte at memory address x+1)
+    /// 4096 Bytes of memory. Chip8 uses BIG ENDIAN (when saving UShort value  we save upper byte at address x and then lower byte at memory address x+1)
     private(set) var randomAccessMemory: [UByte]
     
     /// 15 general purpose registers and 1 "carry-flag" register
     private(set) var registers: [UByte]
     private(set) var indexRegister: UShort
-    /// Program Counter - points to memory location of operation that will be executed next. Each operation takes 2 memory addresses so increment should be done by 2
+    /// Program Counter - points to memory location of operation code that will be executed next. Default value 0x200 (512). Each operation code takes 2 memory addresses so increment should be done by 2.
     private(set) var pc: UShort
     
     private(set) var callStack: [UShort] // 16 levels // Saves Current ProgramCounter
@@ -34,12 +34,12 @@ class Chip8System {
     private(set) var Output: [UByte] // 64x32
     private(set) var InputKeys: [UByte] // 16 keys
     
-    init(font: [UByte] = Chip8EmuCore.DefaultFontSet) {
+    init(font: [UByte] = Chip8System.DefaultFontSet) {
         self.randomAccessMemory = Array(repeating: 0, count: 4096)
         
         self.registers = Array(repeating: 0, count: 16)
         self.indexRegister = 0
-        self.pc = 0x200 // program counter starts at hex location 0x200 (512)
+        self.pc = 512 // program counter starts at hex location 0x200 (decimal 512)
         
         self.callStack = Array(repeating: 0, count: 16)
         self.callStackPointer = 0
@@ -51,12 +51,12 @@ class Chip8System {
         self.InputKeys = Array(repeating: 0, count: 16)
         
         // Load font set
-        self.randomAccessMemory.replaceSubrange(0...0x50, with: font)
+        self.randomAccessMemory.replaceSubrange(0..<80, with: font)
     }
     
+    /// Load program rom into system ram at location 0x200 (512) where pc starts at default.
     public func loadProgram(_ programROM: [UByte]) {
-        // Load program rom into system ram at location 0x200
-        self.randomAccessMemory.replaceSubrange(0x200...(0x200+programROM.count), with: programROM)
+        self.randomAccessMemory.replaceSubrange(512..<(512+programROM.count), with: programROM)
     }
     
     public func emulateCycle() async{
@@ -68,12 +68,8 @@ class Chip8System {
         // Execute Opcode
         executeOperation(operation: operation)
         
-        try? await Task.sleep(nanoseconds: 5_000_000) // TODO: test speed
-        
         // Update timers
         
-//        let i = Int.random(in: 0..<64*32)
-//        OutputScreen[i] = 1
     }
     
     private func executeOperation(operation: Chip8Operation) {

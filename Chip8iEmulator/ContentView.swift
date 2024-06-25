@@ -30,6 +30,20 @@ struct ContentView: View {
                 await emulationCore.emulate()
             }
         })
+        .focusable()
+        .focusEffectDisabled()
+        .onKeyPress(phases: .down, action: onKeyDown)
+        .onKeyPress(phases: .up, action: onKeyUp)
+    }
+    
+    func onKeyDown(key: KeyPress) -> KeyPress.Result {
+        emulationCore.onKeyDown(key: key.key.character)
+        return .handled
+    }
+    
+    func onKeyUp(key: KeyPress) -> KeyPress.Result {
+        emulationCore.onKeyUp(key: key.key.character)
+        return .handled
     }
 }
 

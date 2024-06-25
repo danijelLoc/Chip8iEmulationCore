@@ -7,14 +7,31 @@
 
 import Foundation
 
+enum EmulationMenuControl {
+    case Pause
+    case FastForward
+    case SaveState
+    case LoadState
+    case Rewind
+}
+
 
 class Chip8EmuCore: ObservableObject {
     private var system: Chip8System
+    /// Number of instructions done in a second. Usually shown in Hz. Default for most programs is 700 Hz
+    private var systemClockCount = 600
+    /// Number of frames (frame rate) drawn per second. Standard for Chip8 is 60 Hz.
+    private var targetSystemFrameCount = 60
+    private var isPaused = false
     
     @Published var outputScreen: [UByte] = Array(repeating: 0, count: 64*32)
     
+    private(set) var EmulationMenuBindings: Dictionary<Character, EmulationMenuControl> = Dictionary() // TODO: CUSTOM SETUP SCREEN
+    private(set) var Chip8InputBindings: Dictionary<UByte, Character> = Dictionary() // TODO: CUSTOM SETUP SCREEN
+    
     init() {
         self.system = Chip8System()
+        
     }
     
     public func emulate() async {
@@ -27,11 +44,24 @@ class Chip8EmuCore: ObservableObject {
         system.loadProgram(program.contentROM)
         
         while(true) {
-            await system.emulateCycle()
+            if isPaused { continue }
+            let systemClockCountPerFrame = systemClockCount / targetSystemFrameCount
             
+            let timeStart = Date()
+            for _ in 0..<systemClockCountPerFrame {
+                await system.emulateCycle()
+            }
+            let timeEnd = Date()
+            
+            let performedInstructionsInterval: Double = timeEnd.timeIntervalSince(timeStart).magnitude
+            let targetFrameTime: Double = 1.0 / Double(targetSystemFrameCount)
+            
+            /// To ensure constant target frame rate / frame time. we have to introduce sleep interval.
+            let sleepPeriodForTargetFrameTime = targetFrameTime > performedInstructionsInterval ? targetFrameTime - performedInstructionsInterval : 0
+            
+            try? await Task.sleep(nanoseconds: UInt64(sleepPeriodForTargetFrameTime * 1_000_000_000))
             await showOutput()
         }
-        
     }
     
     private func readProgramFromFile(fileName: String) -> Chip8Program? {
@@ -43,7 +73,8 @@ class Chip8EmuCore: ObservableObject {
     }
     
     private func setupInput() {
-        
+        Chip8InputBindings = [1: "1", 2: "2", 3: "3", 0xC: "1", 4: "q", 5: "w", 6: "e", 0xD: "r", 7: "a", 8: "s", 9: "d", 0xE: "f", 0xA: "y", 0: "x", 0xB: "c", 0xF: "v"] // TODO: SWAP
+        EmulationMenuBindings = ["p": .Pause, "l": .FastForward]
     }
     
     private func showOutput() async {
@@ -53,29 +84,19 @@ class Chip8EmuCore: ObservableObject {
 
     }
     
-    ///
-    /// Chip8 only supports font with 16 letters  (0,1,...,9,A,....F)
-    /// Reasons: memory constraints and input that also has 16 keys, so Hexadecimal digits were chosen for default font.
-    /// This font is saved in RAM and can then be replaced by game ROM when executed.
-    ///
-    public static let DefaultFontSet: [UByte] = [
-        0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
-        0x20, 0x60, 0x20, 0x20, 0x70, // 1
-        0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
-        0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
-        0x90, 0x90, 0xF0, 0x10, 0x10, // 4
-        0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
-        0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
-        0xF0, 0x10, 0x20, 0x40, 0x40, // 7
-        0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
-        0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
-        0xF0, 0x90, 0xF0, 0x90, 0x90, // A
-        0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
-        0xF0, 0x80, 0x80, 0x80, 0xF0, // C
-        0xE0, 0x90, 0x90, 0x90, 0xE0, // D
-        0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
-        0xF0, 0x80, 0xF0, 0x80, 0x80  // F
-    ]
+    func onKeyDown(key: Character) {
+
+    }
+
+    func onKeyUp(key: Character) {
+        let menuButtonPressed = EmulationMenuBindings[key]
+        switch menuButtonPressed {
+            case .Pause:
+                isPaused = !isPaused
+            default:
+                return
+        }
+    }
 }
 
 ///
