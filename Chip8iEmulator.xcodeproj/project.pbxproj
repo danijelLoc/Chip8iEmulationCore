@@ -13,6 +13,8 @@
 		6937578F2C062128003A84E2 /* Chip8SystemTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6937578E2C062128003A84E2 /* Chip8SystemTests.swift */; };
 		693757A82C0621C7003A84E2 /* Chip8EmuCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 693757A72C0621C7003A84E2 /* Chip8EmuCore.swift */; };
 		693757AB2C062289003A84E2 /* Chip8System.swift in Sources */ = {isa = PBXBuildFile; fileRef = 693757AA2C062289003A84E2 /* Chip8System.swift */; };
+		696AA1D42C45D78600EEB4C6 /* test_opcode.ch8 in Resources */ = {isa = PBXBuildFile; fileRef = 696AA1D32C45D78600EEB4C6 /* test_opcode.ch8 */; };
+		696AA1D52C45D78600EEB4C6 /* test_opcode.ch8 in Resources */ = {isa = PBXBuildFile; fileRef = 696AA1D32C45D78600EEB4C6 /* test_opcode.ch8 */; };
 		699366172C28D92600114AE9 /* Chip8Operation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 699366162C28D92600114AE9 /* Chip8Operation.swift */; };
 		699366192C28E4D500114AE9 /* Chip8SystemSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 699366182C28E4D500114AE9 /* Chip8SystemSnapshot.swift */; };
 		69B5B72F2C2A25DA00BBBAB7 /* Chip8System+Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69B5B72E2C2A25DA00BBBAB7 /* Chip8System+Constants.swift */; };
@@ -41,6 +43,7 @@
 		6937578E2C062128003A84E2 /* Chip8SystemTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chip8SystemTests.swift; sourceTree = "<group>"; };
 		693757A72C0621C7003A84E2 /* Chip8EmuCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chip8EmuCore.swift; sourceTree = "<group>"; };
 		693757AA2C062289003A84E2 /* Chip8System.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chip8System.swift; sourceTree = "<group>"; };
+		696AA1D32C45D78600EEB4C6 /* test_opcode.ch8 */ = {isa = PBXFileReference; lastKnownFileType = file; path = test_opcode.ch8; sourceTree = "<group>"; };
 		699366162C28D92600114AE9 /* Chip8Operation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chip8Operation.swift; sourceTree = "<group>"; };
 		699366182C28E4D500114AE9 /* Chip8SystemSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chip8SystemSnapshot.swift; sourceTree = "<group>"; };
 		69B5B72E2C2A25DA00BBBAB7 /* Chip8System+Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Chip8System+Constants.swift"; sourceTree = "<group>"; };
@@ -128,6 +131,7 @@
 		69EB30A22C17972A00B44961 /* Chip8Programs */ = {
 			isa = PBXGroup;
 			children = (
+				696AA1D32C45D78600EEB4C6 /* test_opcode.ch8 */,
 				69EB30A32C17974900B44961 /* DisplayTest.ch8 */,
 			);
 			path = Chip8Programs;
@@ -215,6 +219,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				693757852C062128003A84E2 /* Preview Assets.xcassets in Resources */,
+				696AA1D42C45D78600EEB4C6 /* test_opcode.ch8 in Resources */,
 				693757812C062128003A84E2 /* Assets.xcassets in Resources */,
 				69EB30A42C17974900B44961 /* DisplayTest.ch8 in Resources */,
 			);
@@ -224,6 +229,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				696AA1D52C45D78600EEB4C6 /* test_opcode.ch8 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

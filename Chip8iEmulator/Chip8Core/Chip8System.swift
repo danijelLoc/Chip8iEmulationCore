@@ -78,24 +78,52 @@ class Chip8System {
             self.Output = Array(repeating: 0, count: 64*32)
             self.pc += 2
             break
+            
         case .Jump(let location):
             self.pc = location
             break
-        case .SetValueToRegister(let registerNumber, let value):
-            self.registers[registerNumber] = value
+        case .CallSubroutine(let address):
+            self.callStack[Int(callStackPointer)] = self.pc
+            self.callStackPointer += 1
+            self.pc = address
+        case .ReturnFromSubroutine:
+            self.callStackPointer -= 1
+            self.pc = callStack[Int(callStackPointer)]
+            self.callStack[Int(callStackPointer)] = 0
+            
+        case .ConditionalSkipRegisterValue(let registerIndex, let value, let isEqual):
+            let registerValue = self.registers[registerIndex]
+            if (isEqual ? registerValue == value : registerValue != value) == true {
+                self.pc += 4
+            } else {
+                self.pc += 2
+            }
+            
+        case .ConditionalSkipRegisters(let registerXIndex, let registerYIndex, let isEqual):
+            let registerXValue = self.registers[registerXIndex]
+            let registerYValue = self.registers[registerYIndex]
+            if (isEqual ? registerXValue == registerYValue : registerXValue != registerYValue) == true {
+                self.pc += 4
+            } else {
+                self.pc += 2
+            }
+            
+        case .SetValueToRegister(let registerIndex, let value):
+            self.registers[registerIndex] = value
             self.pc += 2
             break
-        case .AddValueToRegister(let registerNumber, let value):
-            self.registers[registerNumber] += value
+        case .AddValueToRegister(let registerIndex, let value):
+            self.registers[registerIndex] += value // TODO: Overflow
             self.pc += 2
             break
         case .SetValueToIndexRegister(let value):
             self.indexRegister = value
             self.pc += 2
             break
-        case .DrawSprite(let height, let registerX, let registerY):
-            let locationX = Int(registers[registerX])
-            let locationY = Int(registers[registerY])
+            
+        case .DrawSprite(let height, let registerXIndex, let registerYIndex):
+            let locationX = Int(registers[registerXIndex])
+            let locationY = Int(registers[registerYIndex])
             
             // TODO: Collision flag, pixel by pixel bit by bit.
             let spriteStartAddress = Int(self.indexRegister)

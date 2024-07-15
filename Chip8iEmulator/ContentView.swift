@@ -27,7 +27,7 @@ struct ContentView: View {
         .padding()
         .onAppear(perform: {
             Task {
-                await emulationCore.emulate()
+                await emulationCore.emulate("test_opcode")
             }
         })
         .focusable()

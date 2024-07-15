@@ -34,11 +34,11 @@ class Chip8EmuCore: ObservableObject {
         
     }
     
-    public func emulate() async {
+    public func emulate(_ programName: String) async {
         // Set up render system and register input callbacks
         setupInput();
         
-        let program = readProgramFromFile(fileName: "DisplayTest")
+        let program = readProgramFromFile(fileName: programName)
         guard let program = program else { return }
         
         system.loadProgram(program.contentROM)
