@@ -63,9 +63,10 @@ class Chip8System {
     public func emulateCycle() async{
         // Fetch Opcode
         let opCode: UShort = fetchOperationCode(memoryLocation: pc)
-
+        print(opCode.fullDescription)
         // Decode Opcode
-        guard let operation = Chip8Operation.decode(operationCode: opCode) else { return }
+        let operation = Chip8Operation.decode(operationCode: opCode)
+        print(operation)
         // Execute Opcode
         executeOperation(operation: operation)
         
@@ -146,7 +147,7 @@ class Chip8System {
             case .bitwiseAnd:
                 registers[registerXIndex] = registers[registerXIndex] & registers[registerYIndex]
             case .bitwiseXOR:
-                registers[registerXIndex] = registers[registerXIndex] | registers[registerYIndex]
+                registers[registerXIndex] = registers[registerXIndex] ^ registers[registerYIndex]
             case .addition:
                 let res = registers[registerXIndex].addingReportingOverflow(registers[registerYIndex])
                 registers[registerXIndex]  = res.partialValue
@@ -170,6 +171,30 @@ class Chip8System {
                 registers[registerXIndex]  = res
                 registers[15] = overflow
             }
+            self.pc += 2
+        
+        case .RegistersStorage(let maxIncludedRegisterIndex, let isRestoring):
+            var address = Int(indexRegister);
+            for i in 0...maxIncludedRegisterIndex {
+                if isRestoring {
+                    registers[i] = randomAccessMemory[address]
+                }else{
+                    randomAccessMemory[address] = registers[i]
+                }
+                address += 1
+            }
+            self.pc += 2
+        
+        case .RegisterBinaryToDecimal(let registerXIndex):
+            let decimalValue = Int(registers[registerXIndex])
+            let thirdDecimalDigit = decimalValue % 10
+            let secondDecimalDigit = ((decimalValue - thirdDecimalDigit) / 10) % 10
+            let firstDecimalDigit = (decimalValue - secondDecimalDigit * 10 - thirdDecimalDigit) / 100
+            
+            randomAccessMemory[Int(indexRegister)] = UByte(firstDecimalDigit)
+            randomAccessMemory[Int(indexRegister)+1] = UByte(secondDecimalDigit)
+            randomAccessMemory[Int(indexRegister)+2] = UByte(thirdDecimalDigit)
+    
             self.pc += 2
              
         case .DrawSprite(let height, let registerXIndex, let registerYIndex):
@@ -207,10 +232,14 @@ class Chip8System {
             }
             self.pc += 2
             break
-            
+        case .Unknown(let operationCode):
+            print("!!!!! Skipping unknown operation code: \(operationCode.fullDescription)")
+            self.pc += 2
+            break
         default:
-            print("Operation execution not implemented")
-            return
+            print("!!!!! Skipping not implemented operation: \(operation)")
+            self.pc += 2
+            break
         }
     }
     

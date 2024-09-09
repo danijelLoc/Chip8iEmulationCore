@@ -10,6 +10,7 @@ import Foundation
 
 
 public enum Chip8Operation {
+    
     case ClearScreen
     
     case CallSubroutine(address: UShort)
@@ -29,14 +30,18 @@ public enum Chip8Operation {
     case RegistersOperation(registerXIndex: Int, registerYIndex: Int, operation: RegistersOperation)
     case SetValueToRegisterWithRandomness(registerIndex: Int, value: UByte)
     
-    case DrawSprite(height: Int, registerXIndex: Int, registerYIndex: Int)
+    case RegistersStorage(maxIncludedRegisterIndex: Int, isRestoring: Bool)
+    case RegisterBinaryToDecimal(registerXIndex: Int)
     
-    static func decode(operationCode: UShort) -> Chip8Operation? {
+    case DrawSprite(height: Int, registerXIndex: Int, registerYIndex: Int)
+    case Unknown(operationCode: UShort)
+    
+    static func decode(operationCode: UShort) -> Chip8Operation {
         // Extract common indices
         let registerXIndex = Int((operationCode & 0x0F00) >> 8)
         let registerYIndex = Int((operationCode & 0x00F0) >> 4)
         
-        print("Operation code \(String(format:"%02X", operationCode))")
+        //print("Operation code \(String(format:"%02X", operationCode))")
         
         // Check each opcode pattern
         switch operationCode {
@@ -110,9 +115,17 @@ public enum Chip8Operation {
         case let code where (code & 0xF0FF) == 0xE0A1: // EX9E - Skip next instruction if key stored in VX is not pressed
             return .ConditionalSkipKeyPress(registerIndex: registerXIndex, isPressed: true)
             
+        case let code where (code & 0xF0FF) == 0xF055: // FX55 - Store registers up to index X in memory addresses starting from the one stored in I
+            return .RegistersStorage(maxIncludedRegisterIndex: registerXIndex, isRestoring: false)
+        case let code where (code & 0xF0FF) == 0xF065: // FX65 - Restore registers up to index X from memory addresses starting from the one stored in I
+            return .RegistersStorage(maxIncludedRegisterIndex: registerXIndex, isRestoring: true)
+            
+        case let code where (code & 0xF0FF) == 0xF033: // FX33 - Store register value decimal 3 digits in memory addresses starting from the one stored in I
+            return .RegisterBinaryToDecimal(registerXIndex: registerXIndex)
+            
         default:
-            print("Unknown operation code \(String(format:"%02X", operationCode))")
-            return nil
+            //print("Unknown operation code \(operationCode.hexDescription)")
+            return .Unknown(operationCode: operationCode)
         }
     }
 
@@ -128,4 +141,27 @@ public enum RegistersOperation {
     case subtractFirstFromSecond
     case shiftRight
     case shiftLeft
+}
+
+
+extension UShort {
+    public var fullDescription: String {
+        let bits = String(self, radix: 2).padding(toLength: 16, withPad: "0", startingAt: 0)
+        return "\(String(format:"0x%04X", self))|0b\(bits)|\(self)"
+    }
+    
+    public var hexDescription: String {
+        return "\(String(format:"0x%04X", self))"
+    }
+}
+
+extension UByte {
+    public var fullDescription: String {
+        let bits = String(self, radix: 2).padding(toLength: 8, withPad: "0", startingAt: 0)
+        return "\(String(format:"0x%02X", self))|0b\(bits)|\(self)"
+    }
+    
+    public var hexDescription: String {
+        return "\(String(format:"0x%02X", self))"
+    }
 }
