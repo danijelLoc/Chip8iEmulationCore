@@ -32,7 +32,8 @@ class Chip8System {
     
     /// One dimension Byte array representing output screen (64x32). One byte represents one pixel (0: Black and 255: White), order from left top of the screen.
     private(set) var Output: [UByte] // 64x32
-    private(set) var InputKeys: [UByte] // 16 keys
+    /// Boolean Array containing states of all 16 keys of Chip8. If value at index X is set to True it means that button X is pressed. Chip8 has buttons marked with Hex digits from 0,1,2 ... E, F
+    private(set) var InputKeys: [Bool] // 16 keys
     
     init(font: [UByte] = Chip8System.DefaultFontSet) {
         self.randomAccessMemory = Array(repeating: 0, count: 4096)
@@ -48,7 +49,7 @@ class Chip8System {
         self.soundTimer = 0
         
         self.Output = Array(repeating: 0, count: 64*32)
-        self.InputKeys = Array(repeating: 0, count: 16)
+        self.InputKeys = Array(repeating: false, count: 16)
         
         // Load font set
         self.randomAccessMemory.replaceSubrange(0..<80, with: font)
@@ -72,18 +73,21 @@ class Chip8System {
         
     }
     
-    private func executeOperation(operation: Chip8Operation) {
+    package func executeOperation(operation: Chip8Operation) {
         switch operation {
         case .ClearScreen:
             self.Output = Array(repeating: 0, count: 64*32)
             self.pc += 2
             break
             
-        case .Jump(let location):
+        case .JumpToAddress(let location):
             self.pc = location
             break
+        case .JumpToAddressPlusV0(let location):
+            self.pc = location &+ UShort(registers[0])
+            break
         case .CallSubroutine(let address):
-            self.callStack[Int(callStackPointer)] = self.pc
+            self.callStack[Int(callStackPointer)] = self.pc + 2
             self.callStackPointer += 1
             self.pc = address
         case .ReturnFromSubroutine:
@@ -93,16 +97,23 @@ class Chip8System {
             
         case .ConditionalSkipRegisterValue(let registerIndex, let value, let isEqual):
             let registerValue = self.registers[registerIndex]
-            if (isEqual ? registerValue == value : registerValue != value) == true {
+            if isEqual && registerValue == value || !isEqual && registerValue != value {
                 self.pc += 4
             } else {
                 self.pc += 2
             }
-            
         case .ConditionalSkipRegisters(let registerXIndex, let registerYIndex, let isEqual):
             let registerXValue = self.registers[registerXIndex]
             let registerYValue = self.registers[registerYIndex]
-            if (isEqual ? registerXValue == registerYValue : registerXValue != registerYValue) == true {
+            if isEqual && registerXValue == registerYValue || !isEqual && registerXValue != registerYValue {
+                self.pc += 4
+            } else {
+                self.pc += 2
+            }
+        case .ConditionalSkipKeyPress(let registerIndex, let isPressed):
+            let registerValue = registers[registerIndex]
+            let keyState = InputKeys[Int(registerValue)] // TODO: This could easily be out of range and crash the app... throw error? each app should handle it.
+            if isPressed && keyState || !isPressed && !keyState {
                 self.pc += 4
             } else {
                 self.pc += 2
@@ -112,8 +123,13 @@ class Chip8System {
             self.registers[registerIndex] = value
             self.pc += 2
             break
+        case .SetValueToRegisterWithRandomness(let registerIndex, let value):
+            let randomValue = UByte.random(in: UByte.min...UByte.max)
+            self.registers[registerIndex] = value & randomValue
+            self.pc += 2
+            break
         case .AddValueToRegister(let registerIndex, let value):
-            self.registers[registerIndex] += value // TODO: Overflow
+            self.registers[registerIndex] = registers[registerIndex] &+ (value) // overflow ignored here
             self.pc += 2
             break
         case .SetValueToIndexRegister(let value):
@@ -121,11 +137,47 @@ class Chip8System {
             self.pc += 2
             break
             
+        case .RegistersOperation(let registerXIndex, let registerYIndex, let registersOperation):
+            switch registersOperation {
+            case .setToSecond:
+                registers[registerXIndex] = registers[registerYIndex]
+            case .bitwiseOr:
+                registers[registerXIndex] = registers[registerXIndex] | registers[registerYIndex]
+            case .bitwiseAnd:
+                registers[registerXIndex] = registers[registerXIndex] & registers[registerYIndex]
+            case .bitwiseXOR:
+                registers[registerXIndex] = registers[registerXIndex] | registers[registerYIndex]
+            case .addition:
+                let res = registers[registerXIndex].addingReportingOverflow(registers[registerYIndex])
+                registers[registerXIndex]  = res.partialValue
+                registers[15] = res.overflow ? 1 : 0
+            case .subtractSecondFromFirst:
+                let res = registers[registerXIndex].subtractingReportingOverflow(registers[registerYIndex])
+                registers[registerXIndex]  = res.partialValue
+                registers[15] = res.overflow ? 0 : 1
+            case .subtractFirstFromSecond:
+                let res = registers[registerYIndex].subtractingReportingOverflow(registers[registerXIndex])
+                registers[registerXIndex]  = res.partialValue
+                registers[15] = res.overflow ? 0 : 1
+            case .shiftRight:
+                let res = registers[registerXIndex] >> 1
+                let overflow = 0x01 & registers[registerXIndex]
+                registers[registerXIndex]  = res
+                registers[15] = overflow
+            case .shiftLeft:
+                let res = registers[registerXIndex] << 1
+                let overflow = (0x80 & registers[registerXIndex]) >> 7
+                registers[registerXIndex]  = res
+                registers[15] = overflow
+            }
+            self.pc += 2
+             
         case .DrawSprite(let height, let registerXIndex, let registerYIndex):
             let locationX = Int(registers[registerXIndex])
             let locationY = Int(registers[registerYIndex])
             
-            // TODO: Collision flag, pixel by pixel bit by bit.
+            registers[15] = 1 // collision
+            
             let spriteStartAddress = Int(self.indexRegister)
             let spriteEndAddress = spriteStartAddress + height // Chip8 Spite is always 8 pixels (8 bits in memory) wide. One memory address stores one row of sprite. So whole sprite is <height> bytes long
             let sprite = Array(self.randomAccessMemory[spriteStartAddress..<spriteEndAddress])
@@ -140,16 +192,22 @@ class Chip8System {
                     if locationX+i + (locationY+j)*64 >= Output.count {
                         continue
                     }
+                    let pixelBefore = Output[locationX+i + (locationY+j)*64]
                     let spritePixel = (sprite[j] & UInt8(NSDecimalNumber(decimal: pow(2, (7-i))).intValue)) >> (7-i)
                     let pixel = spritePixel == 0 ? Output[locationX+i + (locationY+j)*64] : Output[locationX+i + (locationY+j)*64] ^ spritePixel
                     if pixel > 1 {
+                        print("Error unexpected pixel value") // TODO: THROW
                         return
                     }
                     Output[locationX+i + (locationY+j)*64] = pixel
+                    if (pixel != pixelBefore && pixelBefore == 1) {
+                        registers[15] = 1 // collision
+                    }
                 }
             }
             self.pc += 2
             break
+            
         default:
             print("Operation execution not implemented")
             return

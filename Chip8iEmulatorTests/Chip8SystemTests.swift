@@ -44,6 +44,8 @@ final class Chip8SystemTests: XCTestCase {
         
         await system.emulateCycle()
         
+        system.executeOperation(operation: .ClearScreen);
+        
         XCTAssertEqual(0x202, system.pc)
         XCTAssertEqual(UShort(0x0), system.UpcomingOperationCode)
     }
