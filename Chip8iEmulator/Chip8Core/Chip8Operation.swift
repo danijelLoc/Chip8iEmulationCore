@@ -11,6 +11,7 @@ import Foundation
 
 public enum Chip8Operation {
     
+    case Unknown(operationCode: UShort)
     case ClearScreen
     
     case CallSubroutine(address: UShort)
@@ -34,7 +35,6 @@ public enum Chip8Operation {
     case RegisterBinaryToDecimal(registerXIndex: Int)
     
     case DrawSprite(height: Int, registerXIndex: Int, registerYIndex: Int)
-    case Unknown(operationCode: UShort)
     
     static func decode(operationCode: UShort) -> Chip8Operation {
         // Extract common indices
@@ -124,7 +124,7 @@ public enum Chip8Operation {
             return .RegisterBinaryToDecimal(registerXIndex: registerXIndex)
             
         default:
-            //print("Unknown operation code \(operationCode.hexDescription)")
+            //print("!!!! Unknown operation code \(operationCode.hexDescription)")
             return .Unknown(operationCode: operationCode)
         }
     }

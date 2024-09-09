@@ -63,10 +63,9 @@ class Chip8System {
     public func emulateCycle() async{
         // Fetch Opcode
         let opCode: UShort = fetchOperationCode(memoryLocation: pc)
-        print(opCode.fullDescription)
         // Decode Opcode
         let operation = Chip8Operation.decode(operationCode: opCode)
-        print(operation)
+        print("\(opCode.hexDescription) -> \(operation)")
         // Execute Opcode
         executeOperation(operation: operation)
         
