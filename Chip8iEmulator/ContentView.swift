@@ -6,10 +6,12 @@
 //
 
 import SwiftUI
+import AppKit
 
 struct ContentView: View {
     @StateObject var emulationCore = Chip8EmuCore()
-
+    private let beepingSound = NSSound(named: NSSound.Name("Ping"))
+    
     var body: some View {
         VStack {
             HStack {
@@ -22,18 +24,20 @@ struct ContentView: View {
                 .interpolation(.none)
                 .resizable()
                 .scaledToFit()
-
         }
         .padding()
         .onAppear(perform: {
             Task {
-                await emulationCore.emulate("test_opcode")
+                await emulationCore.emulate("7-beep")
             }
         })
         .focusable()
         .focusEffectDisabled()
         .onKeyPress(phases: .down, action: onKeyDown)
         .onKeyPress(phases: .up, action: onKeyUp)
+        .onChange(of: emulationCore.outputSoundTimer) { oldValue, newValue in
+            handleSoundTimer(soundTimer: newValue)
+        }
     }
     
     func onKeyDown(key: KeyPress) -> KeyPress.Result {
@@ -45,6 +49,14 @@ struct ContentView: View {
         emulationCore.onKeyUp(key: key.key.character)
         return .handled
     }
+    
+    func handleSoundTimer(soundTimer: UByte) {
+        if soundTimer > 0 && !(beepingSound?.isPlaying == true) {
+            beepingSound?.play()
+        } else if soundTimer == 0 && beepingSound?.isPlaying == true {
+            beepingSound?.stop()
+        }
+    }
 }
 
 
@@ -54,14 +66,14 @@ struct ContentView: View {
 }
 
 extension CGImage {
-    public static func fromMonochromeBitmap(pixels: [UByte], width: Int, height: Int) -> CGImage? {
+    public static func fromMonochromeBitmap(pixels: [Bool], width: Int, height: Int) -> CGImage? {
         guard width > 0 && height > 0 else { return nil }
         guard pixels.count == width * height else { return nil }
         
         let grayColorSpace = CGColorSpaceCreateDeviceGray()
         let bitmapInfo: CGBitmapInfo = [CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue), CGBitmapInfo(rawValue: CGImageByteOrderInfo.orderDefault.rawValue)]
 
-        var data: [UByte] = pixels.map {x in x * 255 } // Copy to mutable []
+        var data: [UByte] = pixels.map {x in (x ? 1 : 0)  * 255 } // Copy to mutable []
 //        data[64*0 + 0] = 255
 //        data[64*0 + 1] = 255
 //        data[64*1 + 0] = 255

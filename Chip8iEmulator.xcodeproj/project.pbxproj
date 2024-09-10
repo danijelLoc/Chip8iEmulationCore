@@ -25,6 +25,7 @@
 		69EB30A42C17974900B44961 /* DisplayTest.ch8 in Resources */ = {isa = PBXBuildFile; fileRef = 69EB30A32C17974900B44961 /* DisplayTest.ch8 */; };
 		69F75ECB2C90AC6B00100B52 /* Chip8OperationParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69F75ECA2C90AC6B00100B52 /* Chip8OperationParser.swift */; };
 		69F75ECD2C90AECD00100B52 /* SystemExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69F75ECC2C90AECD00100B52 /* SystemExtensions.swift */; };
+		69F75ECF2C90DBD200100B52 /* 7-beep.ch8 in Resources */ = {isa = PBXBuildFile; fileRef = 69F75ECE2C90DBD200100B52 /* 7-beep.ch8 */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -54,6 +55,7 @@
 		69EB30A32C17974900B44961 /* DisplayTest.ch8 */ = {isa = PBXFileReference; lastKnownFileType = file; path = DisplayTest.ch8; sourceTree = "<group>"; };
 		69F75ECA2C90AC6B00100B52 /* Chip8OperationParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chip8OperationParser.swift; sourceTree = "<group>"; };
 		69F75ECC2C90AECD00100B52 /* SystemExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemExtensions.swift; sourceTree = "<group>"; };
+		69F75ECE2C90DBD200100B52 /* 7-beep.ch8 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "7-beep.ch8"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -137,6 +139,7 @@
 		69EB30A22C17972A00B44961 /* Chip8Programs */ = {
 			isa = PBXGroup;
 			children = (
+				69F75ECE2C90DBD200100B52 /* 7-beep.ch8 */,
 				696AA1D32C45D78600EEB4C6 /* test_opcode.ch8 */,
 				69EB30A32C17974900B44961 /* DisplayTest.ch8 */,
 			);
@@ -234,6 +237,7 @@
 			files = (
 				693757852C062128003A84E2 /* Preview Assets.xcassets in Resources */,
 				696AA1D42C45D78600EEB4C6 /* test_opcode.ch8 in Resources */,
+				69F75ECF2C90DBD200100B52 /* 7-beep.ch8 in Resources */,
 				693757812C062128003A84E2 /* Assets.xcassets in Resources */,
 				69EB30A42C17974900B44961 /* DisplayTest.ch8 in Resources */,
 			);

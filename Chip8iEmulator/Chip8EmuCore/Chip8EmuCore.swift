@@ -26,7 +26,11 @@ class Chip8EmuCore: ObservableObject { // TODO: Refactor... target app should in
     
     private let opCodeParser: Chip8OperationParserProtocol
     
-    @Published var outputScreen: [UByte] = Array(repeating: 0, count: 64*32)
+    /// Output screen buffer 64 width x 32 height. Pixel can be 0 or 1. True is turned On and False is turned Off.
+    @Published var outputScreen: [Bool] = Array(repeating: false, count: 64*32)
+    /// Indicates if emulator should ply the sound. Returns (playSound, SoundTimerValue). If timer is greater than 0 playSound will be true.
+    /// Important: On every change of timer value that is greater than 0 you should play short sound (tick).
+    @Published var outputSoundTimer: UByte = 0
     
     private(set) var EmulationMenuBindings: Dictionary<Character, EmulationMenuControl> = Dictionary() // TODO: CUSTOM SETUP SCREEN
     private(set) var Chip8InputBindings: Dictionary<UByte, Character> = Dictionary() // TODO: CUSTOM SETUP SCREEN
@@ -63,7 +67,15 @@ class Chip8EmuCore: ObservableObject { // TODO: Refactor... target app should in
             let sleepPeriodForTargetFrameTime = targetFrameTime > performedInstructionsInterval ? targetFrameTime - performedInstructionsInterval : 0
             
             try? await Task.sleep(nanoseconds: UInt64(sleepPeriodForTargetFrameTime * 1_000_000_000)) // TODO: refactor
-            await showOutput()
+            
+            // TODO: what if it's different frequency for frame-rate and timers?
+            // TODO: (timers in its own task...)
+            // Update timers
+            system.decreaseDelayTimer()
+            system.decreaseSoundTimer()
+            
+            await publishOutput()
+            await publishSoundTimer()
         }
     }
     
@@ -75,8 +87,6 @@ class Chip8EmuCore: ObservableObject { // TODO: Refactor... target app should in
         print("\(opCode.hexDescription) -> \(operation)")
         // Execute Opcode
         system.executeOperation(operation: operation)
-        
-        // Update timers
     }
     
     private func readProgramFromFile(fileName: String) -> Chip8Program? {
@@ -92,11 +102,16 @@ class Chip8EmuCore: ObservableObject { // TODO: Refactor... target app should in
         EmulationMenuBindings = ["p": .Pause, "l": .FastForward]
     }
     
-    private func showOutput() async {
+    private func publishOutput() async {
         await MainActor.run {
-            outputScreen = system.state.Output
+            outputScreen = system.state.Output.map { byte in byte > 0 }
         }
-
+    }
+    
+    private func publishSoundTimer() async {
+        await MainActor.run {
+            outputSoundTimer = system.state.soundTimer
+        }
     }
     
     func onKeyDown(key: Character) {

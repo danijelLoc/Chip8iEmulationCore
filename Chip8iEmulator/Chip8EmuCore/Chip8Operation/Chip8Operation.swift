@@ -36,25 +36,25 @@ public enum Chip8Operation {
     /// BNNN - jump (set PC to NNN+V0) Note: V0 is register at the index 0
     case JumpToAddressPlusV0(address: UShort)
     
-    /// Conditional skip next instruction on comparing register to the value. if condition is met then we will move PC by 4 memory location instead of 2 (current instruction takes 2 memory locations).
+    /// Conditional skip next instruction on comparing register (at the index X) to the value. if condition is met then we will move PC by 4 memory location instead of 2 (current instruction takes 2 memory locations).
     ///
     /// 3XNN - Skip next instruction if VX == NN
     ///
     /// 4XNN - Skip next instruction if VX != NN
     case ConditionalSkipRegisterValue(registerIndex: Int, value: UByte, isEqual: Bool)
-    /// Conditional skip next instruction on comparing registerX to registerY. If condition is met then we will move PC by 4 memory location instead of 2 (current instruction takes 2 memory locations).
+    /// Conditional skip next instruction on comparing VX to VY. If condition is met then we will move PC by 4 memory location instead of 2 (current instruction takes 2 memory locations).
     ///
     /// 5XY0 - Skip next instruction if VX == VY
     ///
     /// 9XY0 - Skip next instruction if VX != VY
     case ConditionalSkipRegisters(registerXIndex: Int, registerYIndex: Int, isEqual: Bool)
-    /// Conditional skip next instruction if key stored in registerX is pressed or not. If condition is met then we will move PC by 4 memory location instead of 2 (current instruction takes 2 memory locations).
+    /// Conditional skip next instruction if key stored in VX is pressed or not. If condition is met then we will move PC by 4 memory location instead of 2 (current instruction takes 2 memory locations).
     ///
     /// EX9E - Skip next instruction if key stored in VX is pressed
     ///
     /// EXA1 - Skip next instruction if key stored in VX is not pressed
     case ConditionalSkipKeyPress(registerIndex: Int, isPressed: Bool)
-    /// Conditional wait for key stored in registerX to be pressed to move to next instruction. If key is pressed then increase PC by 2 as always, otherwise don't change PC and remain at current command..
+    /// Conditional wait for key stored in VX to be pressed to move to next instruction. If key is pressed then increase PC by 2 as always, otherwise don't change PC and remain at current command..
     ///
     /// FX0A - Wait until key stored at register is pressed
     case ConditionalPauseUntilKeyPress(registerIndex: Int)
@@ -103,11 +103,24 @@ public enum Chip8Operation {
     /// 
     /// FX65 - Restore registers up to index X from memory addresses starting from the one stored in I
     case RegistersStorage(maxIncludedRegisterIndex: Int, isRestoring: Bool)
-    /// Store decimal digits of registerX value (in decimal format so 000 - 255) in memory addresses starting from the one stored in register I.
+    /// Store decimal digits of VX value (UByte in decimal format so 000 - 255) in memory addresses starting from the one stored in register I.
     /// Leftmost digits is saved to address I, second one is saved at I+1 and third digit is saved at I+2
     ///
-    /// FX33 - Store decimal digits of registerX value (in decimal format 000 - 255) in memory addresses starting from the one stored in I
-    case RegisterBinaryToDecimal(registerXIndex: Int)
+    /// FX33 - Store decimal digits of VX value (in decimal format 000 - 255) in memory addresses starting from the one stored in I
+    case RegisterStoreDecimalDigits(registerXIndex: Int)
+    
+    /// Store value of delay timer into registerX
+    ///
+    /// FX07 sets VX to the current value of the delay timer
+    case DelayTimerStore(registerIndex: Int)
+    /// Set value of VX to delay timer
+    ///
+    /// FX15 sets the delay timer to the value in VX
+    case DelayTimerSet(registerIndex: Int)
+    /// Set value of VX to sound timer
+    ///
+    /// FX18 sets the sound timer to the value in VX
+    case SoundTimerSet(registerIndex: Int)
     
     /// Draw sprite that  has given height at screen location pX = value in register with index X, pY= value in register with index Y. Sprite is fetched from memory starting at address stored in index register I. 
     /// One pixel is one bit so sprite width is always 8 pixels, hence one pixel row fits into one memory address. Sprite is saved in memory addresses I..<I+height.

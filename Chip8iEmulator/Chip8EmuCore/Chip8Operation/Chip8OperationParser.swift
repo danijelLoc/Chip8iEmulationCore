@@ -95,8 +95,14 @@ public struct Chip8OperationParser: Chip8OperationParserProtocol {
         case let code where (code & 0xF0FF) == 0xF065: // FX65 - Restore registers up to index X from memory addresses starting from the one stored in I
             return .RegistersStorage(maxIncludedRegisterIndex: registerXIndex, isRestoring: true)
             
-        case let code where (code & 0xF0FF) == 0xF033: // FX33 - Store register value decimal 3 digits in memory addresses starting from the one stored in I
-            return .RegisterBinaryToDecimal(registerXIndex: registerXIndex)
+        case let code where (code & 0xF0FF) == 0xF033:
+            return .RegisterStoreDecimalDigits(registerXIndex: registerXIndex)
+        case let code where (code & 0xF0FF) == 0xF007:
+            return .DelayTimerStore(registerIndex: registerXIndex) // FX07 sets VX to the current value of the delay timer
+        case let code where (code & 0xF0FF) == 0xF015:
+            return .DelayTimerSet(registerIndex: registerXIndex) // FX15 sets the delay timer to the value in VX
+        case let code where (code & 0xF0FF) == 0xF018:
+            return .SoundTimerSet(registerIndex: registerXIndex) // FX18 sets the sound timer to the value in VX
             
         default:
             //print("!!!! Unknown operation code \(operationCode.hexDescription)")

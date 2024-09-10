@@ -15,7 +15,7 @@ public struct Chip8SystemState {
     /// 4096 Bytes of memory. Chip8 uses BIG ENDIAN (when saving UShort value  we save upper byte at address x and then lower byte at memory address x+1)
     var randomAccessMemory: [UByte]
     
-    /// 15 general purpose registers and 1 "carry-flag" register
+    /// 15 general purpose registers and 1 "carry-flag" register. Starting from V0 to VF (register with index 0xF or 15 in decimal)
     var registers: [UByte]
     var indexRegister: UShort
     /// Program Counter - points to memory location of operation code that will be executed next. Default value 0x200 (512). Each operation code takes 2 memory addresses so increment should be done by 2.
@@ -26,14 +26,14 @@ public struct Chip8SystemState {
     /// Remembers which level of stack will be used for next push
     var callStackPointer: UShort
     
-    /// if set above 0 they are counting down. Counting at 60Hz
+    /// if set above 0 timer is counting down. Counting at 60Hz
     var delayTimer: UByte
-    /// Buzzer when reaches zero
+    /// if set above 0 system is beeping and timer is counting down. Counting at 60Hz.
     var soundTimer: UByte
     
     /// One dimension Byte array representing output screen (64x32). One byte represents one pixel (0: Black and 255: White), order from left top of the screen.
     var Output: [UByte] // 64x32
-    /// Boolean Array containing states of all 16 keys of Chip8. If value at index X is set to True it means that button X is pressed. Chip8 has buttons marked with Hex digits from 0,1,2 ... E, F
+    /// Boolean Array containing states of all 16 keys of Chip8. System has buttons marked with Hex digits from 0,1,2 ... E, F. If value at index X is set to True it means that X-th button is pressed.
     var InputKeys: [Bool] // 16 keys
     
     init() {
@@ -192,7 +192,7 @@ class Chip8System {
             }
             state.pc += 2
         
-        case .RegisterBinaryToDecimal(let registerXIndex):
+        case .RegisterStoreDecimalDigits(let registerXIndex):
             let decimalValue = Int(state.registers[registerXIndex])
             let thirdDecimalDigit = decimalValue % 10
             let secondDecimalDigit = ((decimalValue - thirdDecimalDigit) / 10) % 10
@@ -202,6 +202,15 @@ class Chip8System {
             state.randomAccessMemory[Int(state.indexRegister)+1] = UByte(secondDecimalDigit)
             state.randomAccessMemory[Int(state.indexRegister)+2] = UByte(thirdDecimalDigit)
     
+            state.pc += 2
+        case .DelayTimerStore(let registerIndex):
+            state.registers[Int(registerIndex)] = state.delayTimer
+            state.pc += 2
+        case .DelayTimerSet(let registerIndex):
+            state.delayTimer = state.registers[Int(registerIndex)]
+            state.pc += 2
+        case .SoundTimerSet(let registerIndex):
+            state.soundTimer = state.registers[Int(registerIndex)]
             state.pc += 2
              
         case .DrawSprite(let height, let registerXIndex, let registerYIndex):
@@ -255,5 +264,15 @@ class Chip8System {
         let secondByte = state.randomAccessMemory[Int(memoryLocation + 1)]
         let opCode: UShort = (UShort(firstByte) << 8) | UShort(secondByte) // chip8 uses big endian
         return opCode
+    }
+    
+    public func decreaseDelayTimer() {
+        if state.delayTimer == 0 { return }
+        state.delayTimer -= 1
+    }
+    
+    public func decreaseSoundTimer() {
+        if state.soundTimer == 0 { return }
+        state.soundTimer -= 1
     }
 }
