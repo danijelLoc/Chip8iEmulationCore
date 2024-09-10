@@ -25,6 +25,8 @@
 		69B5B72F2C2A25DA00BBBAB7 /* Chip8System+Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69B5B72E2C2A25DA00BBBAB7 /* Chip8System+Constants.swift */; };
 		69EB30982C1781B900B44961 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6937577E2C062127003A84E2 /* ContentView.swift */; };
 		69EB30A42C17974900B44961 /* DisplayTest.ch8 in Resources */ = {isa = PBXBuildFile; fileRef = 69EB30A32C17974900B44961 /* DisplayTest.ch8 */; };
+		69F75ECB2C90AC6B00100B52 /* Chip8OperationParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69F75ECA2C90AC6B00100B52 /* Chip8OperationParser.swift */; };
+		69F75ECD2C90AECD00100B52 /* SystemExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69F75ECC2C90AECD00100B52 /* SystemExtensions.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -53,6 +55,8 @@
 		699366182C28E4D500114AE9 /* Chip8SystemSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chip8SystemSnapshot.swift; sourceTree = "<group>"; };
 		69B5B72E2C2A25DA00BBBAB7 /* Chip8System+Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Chip8System+Constants.swift"; sourceTree = "<group>"; };
 		69EB30A32C17974900B44961 /* DisplayTest.ch8 */ = {isa = PBXFileReference; lastKnownFileType = file; path = DisplayTest.ch8; sourceTree = "<group>"; };
+		69F75ECA2C90AC6B00100B52 /* Chip8OperationParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chip8OperationParser.swift; sourceTree = "<group>"; };
+		69F75ECC2C90AECD00100B52 /* SystemExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemExtensions.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -124,11 +128,12 @@
 		693757A92C062251003A84E2 /* Chip8Core */ = {
 			isa = PBXGroup;
 			children = (
+				69F75EC92C90AC4E00100B52 /* Chip8Operation */,
 				693757A72C0621C7003A84E2 /* Chip8EmuCore.swift */,
 				693757AA2C062289003A84E2 /* Chip8System.swift */,
 				69B5B72E2C2A25DA00BBBAB7 /* Chip8System+Constants.swift */,
 				699366182C28E4D500114AE9 /* Chip8SystemSnapshot.swift */,
-				699366162C28D92600114AE9 /* Chip8Operation.swift */,
+				69F75ECC2C90AECD00100B52 /* SystemExtensions.swift */,
 			);
 			path = Chip8Core;
 			sourceTree = "<group>";
@@ -140,6 +145,15 @@
 				69EB30A32C17974900B44961 /* DisplayTest.ch8 */,
 			);
 			path = Chip8Programs;
+			sourceTree = "<group>";
+		};
+		69F75EC92C90AC4E00100B52 /* Chip8Operation */ = {
+			isa = PBXGroup;
+			children = (
+				699366162C28D92600114AE9 /* Chip8Operation.swift */,
+				69F75ECA2C90AC6B00100B52 /* Chip8OperationParser.swift */,
+			);
+			path = Chip8Operation;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -247,10 +261,12 @@
 				699366172C28D92600114AE9 /* Chip8Operation.swift in Sources */,
 				693757AB2C062289003A84E2 /* Chip8System.swift in Sources */,
 				69EB30982C1781B900B44961 /* ContentView.swift in Sources */,
+				69F75ECD2C90AECD00100B52 /* SystemExtensions.swift in Sources */,
 				6937577D2C062127003A84E2 /* Chip8iEmulatorApp.swift in Sources */,
 				69B5B72F2C2A25DA00BBBAB7 /* Chip8System+Constants.swift in Sources */,
 				693757A82C0621C7003A84E2 /* Chip8EmuCore.swift in Sources */,
 				699366192C28E4D500114AE9 /* Chip8SystemSnapshot.swift in Sources */,
+				69F75ECB2C90AC6B00100B52 /* Chip8OperationParser.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

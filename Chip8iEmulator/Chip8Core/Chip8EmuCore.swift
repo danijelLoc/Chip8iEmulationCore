@@ -16,7 +16,7 @@ enum EmulationMenuControl {
 }
 
 
-class Chip8EmuCore: ObservableObject {
+class Chip8EmuCore: ObservableObject { // TODO: Refactor... target app should insert all those parameters
     private var system: Chip8System
     /// Number of instructions done in a second. Usually shown in Hz. Default for most programs is 700 Hz
     private var systemClockCount = 600
@@ -30,8 +30,7 @@ class Chip8EmuCore: ObservableObject {
     private(set) var Chip8InputBindings: Dictionary<UByte, Character> = Dictionary() // TODO: CUSTOM SETUP SCREEN
     
     init() {
-        self.system = Chip8System()
-        
+        self.system = Chip8System(opCodeParser: Chip8OperationParser())
     }
     
     public func emulate(_ programName: String) async {

@@ -35,7 +35,9 @@ class Chip8System {
     /// Boolean Array containing states of all 16 keys of Chip8. If value at index X is set to True it means that button X is pressed. Chip8 has buttons marked with Hex digits from 0,1,2 ... E, F
     private(set) var InputKeys: [Bool] // 16 keys
     
-    init(font: [UByte] = Chip8System.DefaultFontSet) {
+    private let opCodeParser: Chip8OperationParserProtocol
+    
+    init(font: [UByte] = Chip8System.DefaultFontSet, opCodeParser: Chip8OperationParserProtocol) {
         self.randomAccessMemory = Array(repeating: 0, count: 4096)
         
         self.registers = Array(repeating: 0, count: 16)
@@ -53,6 +55,8 @@ class Chip8System {
         
         // Load font set
         self.randomAccessMemory.replaceSubrange(0..<80, with: font)
+        
+        self.opCodeParser = opCodeParser
     }
     
     /// Load program rom into system ram at location 0x200 (512) where pc starts at default.
@@ -64,7 +68,7 @@ class Chip8System {
         // Fetch Opcode
         let opCode: UShort = fetchOperationCode(memoryLocation: pc)
         // Decode Opcode
-        let operation = Chip8Operation.decode(operationCode: opCode)
+        let operation = opCodeParser.decode(operationCode: opCode)
         print("\(opCode.hexDescription) -> \(operation)")
         // Execute Opcode
         executeOperation(operation: operation)
@@ -73,7 +77,7 @@ class Chip8System {
         
     }
     
-    package func executeOperation(operation: Chip8Operation) {
+    public func executeOperation(operation: Chip8Operation) {
         switch operation {
         case .ClearScreen:
             self.Output = Array(repeating: 0, count: 64*32)
@@ -117,6 +121,14 @@ class Chip8System {
                 self.pc += 4
             } else {
                 self.pc += 2
+            }
+        case .ConditionalPauseUntilKeyPress(let registerIndex):
+            let registerValue = registers[registerIndex]
+            let keyState = InputKeys[Int(registerValue)]
+            if keyState {
+                self.pc += 2
+            } else {
+                self.pc += 0 // Remain at the current operation and wait for key press
             }
             
         case .SetValueToRegister(let registerIndex, let value):
@@ -242,16 +254,10 @@ class Chip8System {
         }
     }
     
-    private func fetchOperationCode(memoryLocation: UShort) -> UShort {
+    public func fetchOperationCode(memoryLocation: UShort) -> UShort {
         let firstByte = randomAccessMemory[Int(memoryLocation)]
         let secondByte = randomAccessMemory[Int(memoryLocation + 1)]
         let opCode: UShort = (UShort(firstByte) << 8) | UShort(secondByte) // chip8 uses big endian
         return opCode
-    }
-    
-    public var UpcomingOperationCode: UShort {
-        get {
-            fetchOperationCode(memoryLocation: pc)
-        }
     }
 }
