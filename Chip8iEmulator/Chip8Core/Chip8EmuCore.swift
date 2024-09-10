@@ -78,7 +78,7 @@ class Chip8EmuCore: ObservableObject { // TODO: Refactor... target app should in
     
     private func showOutput() async {
         await MainActor.run {
-            outputScreen = system.Output
+            outputScreen = system.state.Output
         }
 
     }
