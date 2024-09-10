@@ -10,7 +10,7 @@ import Foundation
 public typealias UByte = UInt8
 public typealias UShort = UInt16
 
-/// Current state of memory, timers, inputs and output buffer
+/// Current state of the Chip8 system, including RAM, Registers, Call Stack, Timers, Program Counter, Input Keys States and Output Screen Buffer
 public struct Chip8SystemState {
     /// 4096 Bytes of memory. Chip8 uses BIG ENDIAN (when saving UShort value  we save upper byte at address x and then lower byte at memory address x+1)
     var randomAccessMemory: [UByte]
@@ -54,21 +54,17 @@ public struct Chip8SystemState {
     }
 }
 
-/// Chip 8 System including RAM, Registers, Call Stack, Timers, Program Counter, Input Keys States and Output Screen Buffer
+/// Chip8 System CPU module that executes system operation with resulting mutation of system state.
 ///
 class Chip8System {
 
     private(set) var state: Chip8SystemState
-    
-    private let opCodeParser: Chip8OperationParserProtocol
     
     init(font: [UByte] = Chip8System.DefaultFontSet, opCodeParser: Chip8OperationParserProtocol) {
         state = Chip8SystemState()
         
         // Load font set
         state.randomAccessMemory.replaceSubrange(0..<80, with: font)
-        
-        self.opCodeParser = opCodeParser
     }
     
     /// Load program rom into system ram at location 0x200 (512) where pc starts at default.
@@ -76,19 +72,7 @@ class Chip8System {
         state.randomAccessMemory.replaceSubrange(512..<(512+programROM.count), with: programROM)
     }
     
-    public func emulateCycle() async{
-        // Fetch Opcode
-        let opCode: UShort = fetchOperationCode(memoryLocation: state.pc)
-        // Decode Opcode
-        let operation = opCodeParser.decode(operationCode: opCode)
-        print("\(opCode.hexDescription) -> \(operation)")
-        // Execute Opcode
-        executeOperation(operation: operation)
-        
-        // Update timers
-        
-    }
-    
+    /// Execute single given operation. It takes needed data from systemState and modifies it
     public func executeOperation(operation: Chip8Operation) {
         switch operation {
         case .ClearScreen:

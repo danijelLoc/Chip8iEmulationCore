@@ -24,6 +24,8 @@ class Chip8EmuCore: ObservableObject { // TODO: Refactor... target app should in
     private var targetSystemFrameCount = 60
     private var isPaused = false
     
+    private let opCodeParser: Chip8OperationParserProtocol
+    
     @Published var outputScreen: [UByte] = Array(repeating: 0, count: 64*32)
     
     private(set) var EmulationMenuBindings: Dictionary<Character, EmulationMenuControl> = Dictionary() // TODO: CUSTOM SETUP SCREEN
@@ -31,8 +33,10 @@ class Chip8EmuCore: ObservableObject { // TODO: Refactor... target app should in
     
     init() {
         self.system = Chip8System(opCodeParser: Chip8OperationParser())
+        self.opCodeParser = Chip8OperationParser()
     }
     
+    // TODO: refactor this... easier, pause, resume, execute command by command, load, save...
     public func emulate(_ programName: String) async {
         // Set up render system and register input callbacks
         setupInput();
@@ -48,7 +52,7 @@ class Chip8EmuCore: ObservableObject { // TODO: Refactor... target app should in
             
             let timeStart = Date()
             for _ in 0..<systemClockCountPerFrame {
-                await system.emulateCycle()
+                await emulateSingleCycle()
             }
             let timeEnd = Date()
             
@@ -58,9 +62,21 @@ class Chip8EmuCore: ObservableObject { // TODO: Refactor... target app should in
             /// To ensure constant target frame rate / frame time. we have to introduce sleep interval.
             let sleepPeriodForTargetFrameTime = targetFrameTime > performedInstructionsInterval ? targetFrameTime - performedInstructionsInterval : 0
             
-            try? await Task.sleep(nanoseconds: UInt64(sleepPeriodForTargetFrameTime * 1_000_000_000))
+            try? await Task.sleep(nanoseconds: UInt64(sleepPeriodForTargetFrameTime * 1_000_000_000)) // TODO: refactor
             await showOutput()
         }
+    }
+    
+    private func emulateSingleCycle() async {
+        // Fetch Opcode
+        let opCode: UShort = system.fetchOperationCode(memoryLocation: system.state.pc)
+        // Decode Opcode
+        let operation = opCodeParser.decode(operationCode: opCode)
+        print("\(opCode.hexDescription) -> \(operation)")
+        // Execute Opcode
+        system.executeOperation(operation: operation)
+        
+        // Update timers
     }
     
     private func readProgramFromFile(fileName: String) -> Chip8Program? {
