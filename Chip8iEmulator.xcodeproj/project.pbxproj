@@ -13,22 +13,19 @@
 		6937578F2C062128003A84E2 /* Chip8SystemTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6937578E2C062128003A84E2 /* Chip8SystemTests.swift */; };
 		693757A82C0621C7003A84E2 /* Chip8EmuCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 693757A72C0621C7003A84E2 /* Chip8EmuCore.swift */; };
 		693757AB2C062289003A84E2 /* Chip8System.swift in Sources */ = {isa = PBXBuildFile; fileRef = 693757AA2C062289003A84E2 /* Chip8System.swift */; };
-		6950EADB2C943B5100FF2E9B /* 6-keypad.ch8 in Resources */ = {isa = PBXBuildFile; fileRef = 6950EADA2C943B5100FF2E9B /* 6-keypad.ch8 */; };
-		6950EADD2C943B5900FF2E9B /* 5-quirks.ch8 in Resources */ = {isa = PBXBuildFile; fileRef = 6950EADC2C943B5900FF2E9B /* 5-quirks.ch8 */; };
-		6950EAE12C945FAF00FF2E9B /* Pong.ch8 in Resources */ = {isa = PBXBuildFile; fileRef = 6950EAE02C945FAF00FF2E9B /* Pong.ch8 */; };
-		696AA1D42C45D78600EEB4C6 /* test_opcode.ch8 in Resources */ = {isa = PBXBuildFile; fileRef = 696AA1D32C45D78600EEB4C6 /* test_opcode.ch8 */; };
-		696AA1D52C45D78600EEB4C6 /* test_opcode.ch8 in Resources */ = {isa = PBXBuildFile; fileRef = 696AA1D32C45D78600EEB4C6 /* test_opcode.ch8 */; };
 		698EDA2F2C4C23DC00AB70C2 /* Chip8EmuCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 693757A72C0621C7003A84E2 /* Chip8EmuCore.swift */; };
 		698EDA302C4C23DF00AB70C2 /* Chip8System.swift in Sources */ = {isa = PBXBuildFile; fileRef = 693757AA2C062289003A84E2 /* Chip8System.swift */; };
 		698EDA312C4C23E200AB70C2 /* Chip8System+Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69B5B72E2C2A25DA00BBBAB7 /* Chip8System+Constants.swift */; };
 		698EDA332C4C23E900AB70C2 /* Chip8Operation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 699366162C28D92600114AE9 /* Chip8Operation.swift */; };
 		699366172C28D92600114AE9 /* Chip8Operation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 699366162C28D92600114AE9 /* Chip8Operation.swift */; };
+		6997208A2C946621000CD445 /* 6-keypad.ch8 in Resources */ = {isa = PBXBuildFile; fileRef = 699720862C946621000CD445 /* 6-keypad.ch8 */; };
+		6997208B2C946621000CD445 /* Pong.ch8 in Resources */ = {isa = PBXBuildFile; fileRef = 699720872C946621000CD445 /* Pong.ch8 */; };
+		6997208C2C946621000CD445 /* 7-beep.ch8 in Resources */ = {isa = PBXBuildFile; fileRef = 699720882C946621000CD445 /* 7-beep.ch8 */; };
+		6997208D2C946621000CD445 /* 5-quirks.ch8 in Resources */ = {isa = PBXBuildFile; fileRef = 699720892C946621000CD445 /* 5-quirks.ch8 */; };
 		69B5B72F2C2A25DA00BBBAB7 /* Chip8System+Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69B5B72E2C2A25DA00BBBAB7 /* Chip8System+Constants.swift */; };
 		69EB30982C1781B900B44961 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6937577E2C062127003A84E2 /* ContentView.swift */; };
-		69EB30A42C17974900B44961 /* DisplayTest.ch8 in Resources */ = {isa = PBXBuildFile; fileRef = 69EB30A32C17974900B44961 /* DisplayTest.ch8 */; };
 		69F75ECB2C90AC6B00100B52 /* Chip8OperationParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69F75ECA2C90AC6B00100B52 /* Chip8OperationParser.swift */; };
 		69F75ECD2C90AECD00100B52 /* SystemExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69F75ECC2C90AECD00100B52 /* SystemExtensions.swift */; };
-		69F75ECF2C90DBD200100B52 /* 7-beep.ch8 in Resources */ = {isa = PBXBuildFile; fileRef = 69F75ECE2C90DBD200100B52 /* 7-beep.ch8 */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -52,16 +49,14 @@
 		6937578E2C062128003A84E2 /* Chip8SystemTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chip8SystemTests.swift; sourceTree = "<group>"; };
 		693757A72C0621C7003A84E2 /* Chip8EmuCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chip8EmuCore.swift; sourceTree = "<group>"; };
 		693757AA2C062289003A84E2 /* Chip8System.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chip8System.swift; sourceTree = "<group>"; };
-		6950EADA2C943B5100FF2E9B /* 6-keypad.ch8 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "6-keypad.ch8"; sourceTree = "<group>"; };
-		6950EADC2C943B5900FF2E9B /* 5-quirks.ch8 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "5-quirks.ch8"; sourceTree = "<group>"; };
-		6950EAE02C945FAF00FF2E9B /* Pong.ch8 */ = {isa = PBXFileReference; lastKnownFileType = file; path = Pong.ch8; sourceTree = "<group>"; };
-		696AA1D32C45D78600EEB4C6 /* test_opcode.ch8 */ = {isa = PBXFileReference; lastKnownFileType = file; path = test_opcode.ch8; sourceTree = "<group>"; };
 		699366162C28D92600114AE9 /* Chip8Operation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chip8Operation.swift; sourceTree = "<group>"; };
+		699720862C946621000CD445 /* 6-keypad.ch8 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "6-keypad.ch8"; sourceTree = "<group>"; };
+		699720872C946621000CD445 /* Pong.ch8 */ = {isa = PBXFileReference; lastKnownFileType = file; path = Pong.ch8; sourceTree = "<group>"; };
+		699720882C946621000CD445 /* 7-beep.ch8 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "7-beep.ch8"; sourceTree = "<group>"; };
+		699720892C946621000CD445 /* 5-quirks.ch8 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "5-quirks.ch8"; sourceTree = "<group>"; };
 		69B5B72E2C2A25DA00BBBAB7 /* Chip8System+Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Chip8System+Constants.swift"; sourceTree = "<group>"; };
-		69EB30A32C17974900B44961 /* DisplayTest.ch8 */ = {isa = PBXFileReference; lastKnownFileType = file; path = DisplayTest.ch8; sourceTree = "<group>"; };
 		69F75ECA2C90AC6B00100B52 /* Chip8OperationParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chip8OperationParser.swift; sourceTree = "<group>"; };
 		69F75ECC2C90AECD00100B52 /* SystemExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemExtensions.swift; sourceTree = "<group>"; };
-		69F75ECE2C90DBD200100B52 /* 7-beep.ch8 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "7-beep.ch8"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -103,8 +98,8 @@
 		6937577B2C062127003A84E2 /* Chip8iEmulator */ = {
 			isa = PBXGroup;
 			children = (
+				699720852C946607000CD445 /* Chip8Programs */,
 				693757A92C062251003A84E2 /* Chip8EmuCore */,
-				69EB30A22C17972A00B44961 /* Chip8Programs */,
 				6937577C2C062127003A84E2 /* Chip8iEmulatorApp.swift */,
 				6937577E2C062127003A84E2 /* ContentView.swift */,
 				693757802C062128003A84E2 /* Assets.xcassets */,
@@ -142,15 +137,13 @@
 			path = Chip8EmuCore;
 			sourceTree = "<group>";
 		};
-		69EB30A22C17972A00B44961 /* Chip8Programs */ = {
+		699720852C946607000CD445 /* Chip8Programs */ = {
 			isa = PBXGroup;
 			children = (
-				6950EAE02C945FAF00FF2E9B /* Pong.ch8 */,
-				6950EADC2C943B5900FF2E9B /* 5-quirks.ch8 */,
-				6950EADA2C943B5100FF2E9B /* 6-keypad.ch8 */,
-				69F75ECE2C90DBD200100B52 /* 7-beep.ch8 */,
-				696AA1D32C45D78600EEB4C6 /* test_opcode.ch8 */,
-				69EB30A32C17974900B44961 /* DisplayTest.ch8 */,
+				699720892C946621000CD445 /* 5-quirks.ch8 */,
+				699720862C946621000CD445 /* 6-keypad.ch8 */,
+				699720882C946621000CD445 /* 7-beep.ch8 */,
+				699720872C946621000CD445 /* Pong.ch8 */,
 			);
 			path = Chip8Programs;
 			sourceTree = "<group>";
@@ -244,14 +237,12 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6997208D2C946621000CD445 /* 5-quirks.ch8 in Resources */,
 				693757852C062128003A84E2 /* Preview Assets.xcassets in Resources */,
-				696AA1D42C45D78600EEB4C6 /* test_opcode.ch8 in Resources */,
-				6950EADD2C943B5900FF2E9B /* 5-quirks.ch8 in Resources */,
-				6950EADB2C943B5100FF2E9B /* 6-keypad.ch8 in Resources */,
-				69F75ECF2C90DBD200100B52 /* 7-beep.ch8 in Resources */,
-				6950EAE12C945FAF00FF2E9B /* Pong.ch8 in Resources */,
+				6997208B2C946621000CD445 /* Pong.ch8 in Resources */,
+				6997208C2C946621000CD445 /* 7-beep.ch8 in Resources */,
 				693757812C062128003A84E2 /* Assets.xcassets in Resources */,
-				69EB30A42C17974900B44961 /* DisplayTest.ch8 in Resources */,
+				6997208A2C946621000CD445 /* 6-keypad.ch8 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -259,7 +250,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				696AA1D52C45D78600EEB4C6 /* test_opcode.ch8 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

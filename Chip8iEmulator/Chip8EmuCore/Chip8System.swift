@@ -245,7 +245,7 @@ class Chip8System {
             let locationX = Int(state.registers[registerXIndex])
             let locationY = Int(state.registers[registerYIndex])
             
-            state.registers[15] = 1 // collision
+            state.registers[15] = 0 // collision
             
             let spriteStartAddress = Int(state.indexRegister)
             let spriteEndAddress = spriteStartAddress + height // Chip8 Spite is always 8 pixels (8 bits in memory) wide. One memory address stores one row of sprite. So whole sprite is <height> bytes long
