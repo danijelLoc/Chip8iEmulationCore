@@ -36,7 +36,7 @@ class Chip8EmuCore: ObservableObject { // TODO: Refactor... target app should in
     private(set) var Chip8InputBindings: Dictionary<Character, UByte> = Dictionary() // TODO: CUSTOM SETUP SCREEN
     
     init() {
-        self.system = Chip8System(opCodeParser: Chip8OperationParser())
+        self.system = Chip8System()
         self.opCodeParser = Chip8OperationParser()
     }
     

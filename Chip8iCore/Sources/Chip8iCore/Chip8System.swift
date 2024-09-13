@@ -69,7 +69,7 @@ class Chip8System {
 
     private(set) var state: Chip8SystemState
     
-    init(font: [UByte] = Chip8System.DefaultFontSet, opCodeParser: Chip8OperationParserProtocol) {
+    init(font: [UByte] = Chip8System.DefaultFontSet) {
         state = Chip8SystemState()
         
         // Load font set
