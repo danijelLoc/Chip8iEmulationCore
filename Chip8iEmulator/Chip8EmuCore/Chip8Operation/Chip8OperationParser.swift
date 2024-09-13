@@ -47,12 +47,12 @@ public struct Chip8OperationParser: Chip8OperationParserProtocol {
         case let code where (code & 0xF00F) == 0x9000: // 9XY0 - Skip next instruction if VX != VY
             return .ConditionalSkipRegisters(registerXIndex: registerXIndex, registerYIndex: registerYIndex, isEqual: false)
         
-        case let code where (code & 0xF0FF) == 0xE09E: // EX9E - Skip next instruction if key stored in VX is pressed
-            return .ConditionalSkipKeyPress(registerIndex: registerXIndex, isPressed: true)
-        case let code where (code & 0xF0FF) == 0xE0A1: // EXA1 - Skip next instruction if key stored in VX is not pressed
-            return .ConditionalSkipKeyPress(registerIndex: registerXIndex, isPressed: false)
-        case let code where (code & 0xF0FF) == 0xF00A: // FX0A - Wait until key stored at register is pressed
-            return .ConditionalPauseUntilKeyPress(registerIndex: registerXIndex)
+        case let code where (code & 0xF0FF) == 0xE09E: // EX9E - Skip next instruction if key stored in VX is pressed down
+            return .ConditionalSkipKeyDown(registerIndex: registerXIndex, isKeyDown: true)
+        case let code where (code & 0xF0FF) == 0xE0A1: // EXA1 - Skip next instruction if key stored in VX is not pressed down
+            return .ConditionalSkipKeyDown(registerIndex: registerXIndex, isKeyDown: false)
+        case let code where (code & 0xF0FF) == 0xF00A: // FX0A - Wait until key pressed (down and released) and  store it in VX
+            return .ConditionalPauseUntilKeyTap(registerIndex: registerXIndex)
             
         case let code where (code & 0xF000) == 0x6000: // 6XNN - set value NN to register X
             let value = UByte(code & 0x00FF)

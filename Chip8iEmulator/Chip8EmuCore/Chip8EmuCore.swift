@@ -33,7 +33,7 @@ class Chip8EmuCore: ObservableObject { // TODO: Refactor... target app should in
     @Published var outputSoundTimer: UByte = 0
     
     private(set) var EmulationMenuBindings: Dictionary<Character, EmulationMenuControl> = Dictionary() // TODO: CUSTOM SETUP SCREEN
-    private(set) var Chip8InputBindings: Dictionary<UByte, Character> = Dictionary() // TODO: CUSTOM SETUP SCREEN
+    private(set) var Chip8InputBindings: Dictionary<Character, UByte> = Dictionary() // TODO: CUSTOM SETUP SCREEN
     
     init() {
         self.system = Chip8System(opCodeParser: Chip8OperationParser())
@@ -98,7 +98,12 @@ class Chip8EmuCore: ObservableObject { // TODO: Refactor... target app should in
     }
     
     private func setupInput() {
-        Chip8InputBindings = [1: "1", 2: "2", 3: "3", 0xC: "1", 4: "q", 5: "w", 6: "e", 0xD: "r", 7: "a", 8: "s", 9: "d", 0xE: "f", 0xA: "y", 0: "x", 0xB: "c", 0xF: "v"] // TODO: SWAP
+        Chip8InputBindings = [
+            "1": 1, "2": 2, "3": 3, "4": 0xC,
+            "q": 4, "w": 5, "e": 6, "r": 0xD,
+            "a": 7, "s": 8, "d": 9, "f": 0xE,
+            "y": 0xA, "x": 0, "c": 0xB, "v": 0xF
+        ]
         EmulationMenuBindings = ["p": .Pause, "l": .FastForward]
     }
     
@@ -115,16 +120,22 @@ class Chip8EmuCore: ObservableObject { // TODO: Refactor... target app should in
     }
     
     func onKeyDown(key: Character) {
-
+        if let chip8Key = Chip8InputBindings[key] {
+            system.KeyDown(key: chip8Key)
+        }
     }
 
     func onKeyUp(key: Character) {
-        let menuButtonPressed = EmulationMenuBindings[key]
-        switch menuButtonPressed {
-            case .Pause:
-                isPaused = !isPaused
-            default:
-                return
+        if let chip8Key = Chip8InputBindings[key] {
+            system.KeyUp(key: chip8Key)
+        }
+        else if let menuButtonPressed = EmulationMenuBindings[key] {
+            switch menuButtonPressed {
+                case .Pause:
+                    isPaused = !isPaused
+                default:
+                    return
+            }
         }
     }
 }

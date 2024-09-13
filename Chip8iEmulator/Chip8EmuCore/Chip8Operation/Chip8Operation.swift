@@ -48,16 +48,16 @@ public enum Chip8Operation {
     ///
     /// 9XY0 - Skip next instruction if VX != VY
     case ConditionalSkipRegisters(registerXIndex: Int, registerYIndex: Int, isEqual: Bool)
-    /// Conditional skip next instruction if key stored in VX is pressed or not. If condition is met then we will move PC by 4 memory location instead of 2 (current instruction takes 2 memory locations).
+    /// Conditional skip next instruction if key stored in VX is pressed down or not. If condition is met then we will move PC by 4 memory location instead of 2 (current instruction takes 2 memory locations).
     ///
-    /// EX9E - Skip next instruction if key stored in VX is pressed
+    /// EX9E - Skip next instruction if key stored in VX is pressed down
     ///
-    /// EXA1 - Skip next instruction if key stored in VX is not pressed
-    case ConditionalSkipKeyPress(registerIndex: Int, isPressed: Bool)
-    /// Conditional wait for key stored in VX to be pressed to move to next instruction. If key is pressed then increase PC by 2 as always, otherwise don't change PC and remain at current command..
+    /// EXA1 - Skip next instruction if key stored in VX is not pressed down
+    case ConditionalSkipKeyDown(registerIndex: Int, isKeyDown: Bool)
+    /// Conditional wait for any key to be pressed down and released to store it in VX and move to next instruction. If key is pressed (down and released) then increase PC by 2 as always, otherwise don't change PC and remain at current command..
     ///
-    /// FX0A - Wait until key stored at register is pressed
-    case ConditionalPauseUntilKeyPress(registerIndex: Int)
+    /// FX0A - Wait until key tap (press and release)  and  store it in VX
+    case ConditionalPauseUntilKeyTap(registerIndex: Int)
     
     /// Set value to register
     ///

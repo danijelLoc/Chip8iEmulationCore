@@ -36,6 +36,9 @@ public struct Chip8SystemState {
     /// Boolean Array containing states of all 16 keys of Chip8. System has buttons marked with Hex digits from 0,1,2 ... E, F. If value at index X is set to True it means that X-th button is pressed.
     var InputKeys: [Bool] // 16 keys
     
+    /// Key for FX0A command that was registered to be pressed and now needs to be released.
+    var InputKeyIndexToBeReleased: UByte?
+    
     /// Address of the start of memory where system font is saved. Font is made of 16 character and each takes 5 bytes so 80 bytes from starting address is taken by font data.
     var fontStartingLocation: UShort
     
@@ -54,6 +57,7 @@ public struct Chip8SystemState {
         
         self.Output = Array(repeating: 0, count: 64*32)
         self.InputKeys = Array(repeating: false, count: 16)
+        self.InputKeyIndexToBeReleased = nil
         
         self.fontStartingLocation = 0x50 // default location for font 0x50 (decimal 80)
     }
@@ -115,23 +119,30 @@ class Chip8System {
             } else {
                 state.pc += 2
             }
-        case .ConditionalSkipKeyPress(let registerIndex, let isPressed):
+        case .ConditionalSkipKeyDown(let registerIndex, let isKeyDown):
             let registerValue = state.registers[registerIndex]
             let keyState = state.InputKeys[registerValue.toInt] // TODO: This could easily be out of range and crash the app... throw error? each app should handle it.
-            if isPressed && keyState || !isPressed && !keyState {
+            if isKeyDown && keyState || !isKeyDown && !keyState {
                 state.pc += 4
             } else {
                 state.pc += 2
             }
-        case .ConditionalPauseUntilKeyPress(let registerIndex):
-            let registerValue = state.registers[registerIndex]
-            let keyState = state.InputKeys[registerValue.toInt]
-            if keyState {
-                state.pc += 2
+        case .ConditionalPauseUntilKeyTap(let registerIndex):
+            if let keyIndexToBeReleased = state.InputKeyIndexToBeReleased {
+                if state.InputKeys[keyIndexToBeReleased.toInt] == false {
+                    state.registers[registerIndex] = keyIndexToBeReleased // save index of pressed and released key into VX
+                    state.InputKeyIndexToBeReleased = nil // reset key to be released TODO: HMMM
+                    state.pc += 2
+                }
             } else {
-                state.pc += 0 // Remain at the current operation and wait for key press
+                let keyPressedDown = state.InputKeys.enumerated().first { (index, value) in
+                    value == true
+                }
+                
+                if let keyPressedDown = keyPressedDown {
+                    state.InputKeyIndexToBeReleased = UByte(keyPressedDown.0) // save index of pressed key and wait for it to be released
+                }
             }
-            
         case .SetValueToRegister(let registerIndex, let value):
             state.registers[registerIndex] = value
             state.pc += 2
@@ -290,5 +301,13 @@ class Chip8System {
     public func decreaseSoundTimer() {
         if state.soundTimer == 0 { return }
         state.soundTimer -= 1
+    }
+    
+    public func KeyDown(key: UByte) {
+        state.InputKeys[key.toInt] = true
+    }
+    
+    public func KeyUp(key: UByte) {
+        state.InputKeys[key.toInt] = false
     }
 }
