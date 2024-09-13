@@ -15,6 +15,7 @@
 		693757AB2C062289003A84E2 /* Chip8System.swift in Sources */ = {isa = PBXBuildFile; fileRef = 693757AA2C062289003A84E2 /* Chip8System.swift */; };
 		6950EADB2C943B5100FF2E9B /* 6-keypad.ch8 in Resources */ = {isa = PBXBuildFile; fileRef = 6950EADA2C943B5100FF2E9B /* 6-keypad.ch8 */; };
 		6950EADD2C943B5900FF2E9B /* 5-quirks.ch8 in Resources */ = {isa = PBXBuildFile; fileRef = 6950EADC2C943B5900FF2E9B /* 5-quirks.ch8 */; };
+		6950EAE12C945FAF00FF2E9B /* Pong.ch8 in Resources */ = {isa = PBXBuildFile; fileRef = 6950EAE02C945FAF00FF2E9B /* Pong.ch8 */; };
 		696AA1D42C45D78600EEB4C6 /* test_opcode.ch8 in Resources */ = {isa = PBXBuildFile; fileRef = 696AA1D32C45D78600EEB4C6 /* test_opcode.ch8 */; };
 		696AA1D52C45D78600EEB4C6 /* test_opcode.ch8 in Resources */ = {isa = PBXBuildFile; fileRef = 696AA1D32C45D78600EEB4C6 /* test_opcode.ch8 */; };
 		698EDA2F2C4C23DC00AB70C2 /* Chip8EmuCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 693757A72C0621C7003A84E2 /* Chip8EmuCore.swift */; };
@@ -53,6 +54,7 @@
 		693757AA2C062289003A84E2 /* Chip8System.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chip8System.swift; sourceTree = "<group>"; };
 		6950EADA2C943B5100FF2E9B /* 6-keypad.ch8 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "6-keypad.ch8"; sourceTree = "<group>"; };
 		6950EADC2C943B5900FF2E9B /* 5-quirks.ch8 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "5-quirks.ch8"; sourceTree = "<group>"; };
+		6950EAE02C945FAF00FF2E9B /* Pong.ch8 */ = {isa = PBXFileReference; lastKnownFileType = file; path = Pong.ch8; sourceTree = "<group>"; };
 		696AA1D32C45D78600EEB4C6 /* test_opcode.ch8 */ = {isa = PBXFileReference; lastKnownFileType = file; path = test_opcode.ch8; sourceTree = "<group>"; };
 		699366162C28D92600114AE9 /* Chip8Operation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chip8Operation.swift; sourceTree = "<group>"; };
 		69B5B72E2C2A25DA00BBBAB7 /* Chip8System+Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Chip8System+Constants.swift"; sourceTree = "<group>"; };
@@ -143,6 +145,7 @@
 		69EB30A22C17972A00B44961 /* Chip8Programs */ = {
 			isa = PBXGroup;
 			children = (
+				6950EAE02C945FAF00FF2E9B /* Pong.ch8 */,
 				6950EADC2C943B5900FF2E9B /* 5-quirks.ch8 */,
 				6950EADA2C943B5100FF2E9B /* 6-keypad.ch8 */,
 				69F75ECE2C90DBD200100B52 /* 7-beep.ch8 */,
@@ -246,6 +249,7 @@
 				6950EADD2C943B5900FF2E9B /* 5-quirks.ch8 in Resources */,
 				6950EADB2C943B5100FF2E9B /* 6-keypad.ch8 in Resources */,
 				69F75ECF2C90DBD200100B52 /* 7-beep.ch8 in Resources */,
+				6950EAE12C945FAF00FF2E9B /* Pong.ch8 in Resources */,
 				693757812C062128003A84E2 /* Assets.xcassets in Resources */,
 				69EB30A42C17974900B44961 /* DisplayTest.ch8 in Resources */,
 			);

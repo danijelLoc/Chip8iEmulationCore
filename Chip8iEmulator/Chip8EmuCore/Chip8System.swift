@@ -167,7 +167,8 @@ class Chip8System {
             break
         case .SetFontCharacterAddressToIndexRegister(let registerIndex):
             let fontCharacterIndex = state.registers[registerIndex]
-            let fontCharacterAddress = state.fontStartingLocation + UShort(fontCharacterIndex)
+            // single font character uses 5 bytes of memory
+            let fontCharacterAddress = state.fontStartingLocation + UShort(fontCharacterIndex * 5)
             state.indexRegister = fontCharacterAddress
             state.pc += 2
             
