@@ -60,7 +60,7 @@ public struct Chip8OperationParser: Chip8OperationParserProtocol {
         case let code where (code & 0xF000) == 0x7000: // 7XNN - add value NN to register X, NOTE: carry flag is not changed
             let value = UByte(code & 0x00FF)
             return .AddValueToRegister(registerIndex: registerXIndex, value: value)
-        case let code where (code & 0xF000) == 0xA000: // ANNN - set value NNN to Index register
+        case let code where (code & 0xF000) == 0xA000: // ANNN - set value NNN to Index register I
             let value = code & 0x0FFF
             return .SetValueToIndexRegister(value: value)
         case let code where (code & 0xF000) == 0xC000: // CXNN - set value (NN & Random) to register X
@@ -90,19 +90,24 @@ public struct Chip8OperationParser: Chip8OperationParserProtocol {
             let height = Int(code & 0x000F)
             return .DrawSprite(height: height, registerXIndex: registerXIndex, registerYIndex: registerYIndex)
         
+        case let code where (code & 0xF0FF) == 0xF01E: // FX1E - add value of VX to index register I, NOTE: carry flag is not changed
+            return .AddRegisterValueToIndexRegister(registerIndex: registerXIndex)
+        case let code where (code & 0xF0FF) == 0xF029: // FX29 - Set address of font character saved in VX to Index register I
+            return .SetFontCharacterAddressToIndexRegister(registerIndex: registerXIndex)
+            
         case let code where (code & 0xF0FF) == 0xF055: // FX55 - Store registers up to index X in memory addresses starting from the one stored in I
             return .RegistersStorage(maxIncludedRegisterIndex: registerXIndex, isRestoring: false)
         case let code where (code & 0xF0FF) == 0xF065: // FX65 - Restore registers up to index X from memory addresses starting from the one stored in I
             return .RegistersStorage(maxIncludedRegisterIndex: registerXIndex, isRestoring: true)
             
-        case let code where (code & 0xF0FF) == 0xF033:
+        case let code where (code & 0xF0FF) == 0xF033: // FX33 - Store decimal digits of VX value in memory addresses starting from the one stored in I
             return .RegisterStoreDecimalDigits(registerXIndex: registerXIndex)
-        case let code where (code & 0xF0FF) == 0xF007:
-            return .DelayTimerStore(registerIndex: registerXIndex) // FX07 sets VX to the current value of the delay timer
-        case let code where (code & 0xF0FF) == 0xF015:
-            return .DelayTimerSet(registerIndex: registerXIndex) // FX15 sets the delay timer to the value in VX
-        case let code where (code & 0xF0FF) == 0xF018:
-            return .SoundTimerSet(registerIndex: registerXIndex) // FX18 sets the sound timer to the value in VX
+        case let code where (code & 0xF0FF) == 0xF007: // FX07 sets VX to the current value of the delay timer
+            return .DelayTimerStore(registerIndex: registerXIndex)
+        case let code where (code & 0xF0FF) == 0xF015: // FX15 sets the delay timer to the value in VX
+            return .DelayTimerSet(registerIndex: registerXIndex)
+        case let code where (code & 0xF0FF) == 0xF018: // FX18 sets the sound timer to the value in VX
+            return .SoundTimerSet(registerIndex: registerXIndex)
             
         default:
             //print("!!!! Unknown operation code \(operationCode.hexDescription)")

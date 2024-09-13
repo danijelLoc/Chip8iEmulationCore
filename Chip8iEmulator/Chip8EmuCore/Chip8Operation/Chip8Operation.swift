@@ -97,6 +97,15 @@ public enum Chip8Operation {
     /// 8XYE - Set VX into VX << 1
     case RegistersOperation(registerXIndex: Int, registerYIndex: Int, operation: RegistersOperation)
 
+    /// Set address of font character saved in VX to Index register I
+    ///
+    /// FX29 - Set address of font character saved in VX to Index register I
+    case SetFontCharacterAddressToIndexRegister(registerIndex: Int)
+    /// Add value of VX to index register I
+    ///
+    /// FX15 - add value of VX to index register I, NOTE: carry flag is not changed
+    case AddRegisterValueToIndexRegister(registerIndex: Int)
+    
     /// Storing values from registers (from register0 til and including registerX) into memory addresses starting from I, or restoring them.
     ///
     /// FX55 - Store registers up to index X in memory addresses starting from the one stored in I

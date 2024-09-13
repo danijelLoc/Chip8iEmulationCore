@@ -16,6 +16,10 @@ extension UShort {
     public var hexDescription: String {
         return "\(String(format:"0x%04X", self))"
     }
+    
+    public var toInt: Int {
+        return Int(self)
+    }
 }
 
 extension UByte {
@@ -26,5 +30,9 @@ extension UByte {
     
     public var hexDescription: String {
         return "\(String(format:"0x%02X", self))"
+    }
+    
+    public var toInt: Int {
+        return Int(self)
     }
 }

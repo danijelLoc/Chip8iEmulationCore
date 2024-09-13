@@ -36,6 +36,9 @@ public struct Chip8SystemState {
     /// Boolean Array containing states of all 16 keys of Chip8. System has buttons marked with Hex digits from 0,1,2 ... E, F. If value at index X is set to True it means that X-th button is pressed.
     var InputKeys: [Bool] // 16 keys
     
+    /// Address of the start of memory where system font is saved. Font is made of 16 character and each takes 5 bytes so 80 bytes from starting address is taken by font data.
+    var fontStartingLocation: UShort
+    
     init() {
         self.randomAccessMemory = Array(repeating: 0, count: 4096)
         
@@ -51,6 +54,8 @@ public struct Chip8SystemState {
         
         self.Output = Array(repeating: 0, count: 64*32)
         self.InputKeys = Array(repeating: false, count: 16)
+        
+        self.fontStartingLocation = 0x50 // default location for font 0x50 (decimal 80)
     }
 }
 
@@ -64,7 +69,7 @@ class Chip8System {
         state = Chip8SystemState()
         
         // Load font set
-        state.randomAccessMemory.replaceSubrange(0..<80, with: font)
+        state.randomAccessMemory.replaceSubrange(state.fontStartingLocation.toInt..<(state.fontStartingLocation.toInt+80), with: font)
     }
     
     /// Load program rom into system ram at location 0x200 (512) where pc starts at default.
@@ -87,13 +92,13 @@ class Chip8System {
             state.pc = location &+ UShort(state.registers[0])
             break
         case .CallSubroutine(let address):
-            state.callStack[Int(state.callStackPointer)] = state.pc + 2
+            state.callStack[state.callStackPointer.toInt] = state.pc + 2
             state.callStackPointer += 1
             state.pc = address
         case .ReturnFromSubroutine:
             state.callStackPointer -= 1
-            state.pc = state.callStack[Int(state.callStackPointer)]
-            state.callStack[Int(state.callStackPointer)] = 0
+            state.pc = state.callStack[state.callStackPointer.toInt]
+            state.callStack[state.callStackPointer.toInt] = 0
             
         case .ConditionalSkipRegisterValue(let registerIndex, let value, let isEqual):
             let registerValue = state.registers[registerIndex]
@@ -112,7 +117,7 @@ class Chip8System {
             }
         case .ConditionalSkipKeyPress(let registerIndex, let isPressed):
             let registerValue = state.registers[registerIndex]
-            let keyState = state.InputKeys[Int(registerValue)] // TODO: This could easily be out of range and crash the app... throw error? each app should handle it.
+            let keyState = state.InputKeys[registerValue.toInt] // TODO: This could easily be out of range and crash the app... throw error? each app should handle it.
             if isPressed && keyState || !isPressed && !keyState {
                 state.pc += 4
             } else {
@@ -120,7 +125,7 @@ class Chip8System {
             }
         case .ConditionalPauseUntilKeyPress(let registerIndex):
             let registerValue = state.registers[registerIndex]
-            let keyState = state.InputKeys[Int(registerValue)]
+            let keyState = state.InputKeys[registerValue.toInt]
             if keyState {
                 state.pc += 2
             } else {
@@ -140,10 +145,21 @@ class Chip8System {
             state.registers[registerIndex] = state.registers[registerIndex] &+ (value) // overflow ignored here
             state.pc += 2
             break
+        case .AddRegisterValueToIndexRegister(let registerIndex):
+            let registerValue = state.registers[registerIndex]
+            state.indexRegister = state.indexRegister &+ (UShort(registerValue)) // overflow ignored here
+            state.pc += 2
+            break
         case .SetValueToIndexRegister(let value):
             state.indexRegister = value
             state.pc += 2
             break
+        case .SetFontCharacterAddressToIndexRegister(let registerIndex):
+            let fontCharacterIndex = state.registers[registerIndex]
+            let fontCharacterAddress = state.fontStartingLocation + UShort(fontCharacterIndex)
+            state.indexRegister = fontCharacterAddress
+            state.pc += 2
+            
             
         case .RegistersOperation(let registerXIndex, let registerYIndex, let registersOperation):
             switch registersOperation {
@@ -198,19 +214,19 @@ class Chip8System {
             let secondDecimalDigit = ((decimalValue - thirdDecimalDigit) / 10) % 10
             let firstDecimalDigit = (decimalValue - secondDecimalDigit * 10 - thirdDecimalDigit) / 100
             
-            state.randomAccessMemory[Int(state.indexRegister)] = UByte(firstDecimalDigit)
-            state.randomAccessMemory[Int(state.indexRegister)+1] = UByte(secondDecimalDigit)
-            state.randomAccessMemory[Int(state.indexRegister)+2] = UByte(thirdDecimalDigit)
+            state.randomAccessMemory[state.indexRegister.toInt] = UByte(firstDecimalDigit)
+            state.randomAccessMemory[state.indexRegister.toInt + 1] = UByte(secondDecimalDigit)
+            state.randomAccessMemory[state.indexRegister.toInt + 2] = UByte(thirdDecimalDigit)
     
             state.pc += 2
         case .DelayTimerStore(let registerIndex):
-            state.registers[Int(registerIndex)] = state.delayTimer
+            state.registers[registerIndex] = state.delayTimer
             state.pc += 2
         case .DelayTimerSet(let registerIndex):
-            state.delayTimer = state.registers[Int(registerIndex)]
+            state.delayTimer = state.registers[registerIndex]
             state.pc += 2
         case .SoundTimerSet(let registerIndex):
-            state.soundTimer = state.registers[Int(registerIndex)]
+            state.soundTimer = state.registers[registerIndex]
             state.pc += 2
              
         case .DrawSprite(let height, let registerXIndex, let registerYIndex):

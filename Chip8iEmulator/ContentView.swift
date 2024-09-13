@@ -28,7 +28,7 @@ struct ContentView: View {
         .padding()
         .onAppear(perform: {
             Task {
-                await emulationCore.emulate("7-beep")
+                await emulationCore.emulate("6-keypad")
             }
         })
         .focusable()
