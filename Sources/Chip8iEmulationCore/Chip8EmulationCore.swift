@@ -8,8 +8,10 @@
 import Foundation
 
 
-/// Emulation Core that should be used for starting emulation, sending inputs and subscribing to its screen output.
-public class Chip8EmulationCore: ObservableObject { // TODO: Refactor... target app should insert all those parameters
+/// Emulation Core that should be used for starting emulation, sending inputs and subscribing to its screen and sound output. It also includes optional debug output info for advanced users. This is a ViewModel that creates execution loop and communicates with internal Chip8 program operations processing modules.
+public class Chip8EmulationCore: ObservableObject {
+    
+    /// Internal Chip8 System/CPU that executes the commands
     private var system: Chip8System
     /// Number of instructions done in a second. Usually shown in Hz. Default for most programs is 700 Hz
     private var systemClockCount = 600
@@ -20,10 +22,15 @@ public class Chip8EmulationCore: ObservableObject { // TODO: Refactor... target 
     private let opCodeParser: Chip8OperationParserProtocol
     
     /// Output screen buffer 64 width x 32 height. Pixel can be 0 or 1. True is turned On and False is turned Off.
-    @Published public var outputScreen: [Bool] = Array(repeating: false, count: 64*32)
+    @Published public private(set) var outputScreen: [Bool] = Array(repeating: false, count: 64*32)
     /// Indicates if emulator should ply the sound. Returns (playSound, SoundTimerValue). If timer is greater than 0 playSound will be true.
     /// Important: On every change of timer value that is greater than 0 you should play short sound (tick).
-    @Published public var outputSoundTimer: UByte = 0
+    @Published public private(set) var outputSoundTimer: UByte = 0
+    
+    /// Debug Info about previous Operation Code and Operation parsed from it
+    @Published public private(set) var debugPreviousCodeAndOperationInfo: (UShort, Chip8Operation)?
+    /// Debug Info about current Chip8 System State
+    @Published public private(set) var debugSystemStateInfo: Chip8SystemState?
     
     /// Input keys bindings for emulation menu actions EmulationMenuControl like Pause, SaveState, etc. Initially set to DefaultEmulationMenuKeyboardBindings
     public var EmulationMenuBindings: Dictionary<Character, EmulationMenuControl> = DefaultEmulationMenuKeyboardBindings
@@ -36,7 +43,7 @@ public class Chip8EmulationCore: ObservableObject { // TODO: Refactor... target 
     }
     
     /// Start emulation of the Chip8 program
-    public func emulate(program: Chip8ProgramROM) async {
+    public func emulate(program: Chip8Program) async {
         // TODO: refactor this... easier, pause, resume, execute command by command(what about delay and sound timer...), load, save...
         
         system.loadProgram(program.contentROM)
@@ -96,6 +103,12 @@ public class Chip8EmulationCore: ObservableObject { // TODO: Refactor... target 
         print("\(opCode.hexDescription) -> \(operation)")
         // Execute Opcode
         system.executeOperation(operation: operation)
+        
+        // Send debug info
+        await MainActor.run {
+            debugSystemStateInfo = system.state
+            debugPreviousCodeAndOperationInfo = (opCode, operation)
+        }
     }
     
     private func publishOutput() async {
@@ -109,25 +122,4 @@ public class Chip8EmulationCore: ObservableObject { // TODO: Refactor... target 
             outputSoundTimer = system.state.soundTimer
         }
     }
-}
-
-/// Represents compiled program for Chip8 system. Compiled program binary data is saved in .ch8 files for example.
-public struct Chip8ProgramROM {
-    public let name: String
-    /// Read Only Memory - ROM binary content of the compiled program
-    public let contentROM: [UByte]
-    
-    public init(name: String, contentROM: [UByte]) {
-        self.name = name
-        self.contentROM = contentROM
-    }
-}
-
-public enum EmulationMenuControl {
-    case Pause
-// TODO: Implement
-//    case FastForward
-//    case SaveState
-//    case LoadState
-//    case Rewind // maybe later on...
 }

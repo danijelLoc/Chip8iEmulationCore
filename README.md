@@ -22,10 +22,10 @@ let emulationCore = Chip8EmulationCore()
 ```
 
 ### Load Chip8 program
-First, load the chip8 program from the filesystem or otherwise and save its data and name in `Chip8ProgramROM`.
+First, load the chip8 program binary read-only (ROM) data `[UByte]` from the filesystem or otherwise and save it in `Chip8Program` structure ready for emulation.
 
 ```swift
-let programROM = Chip8ProgramROM(name: "My Pong Game", contentROM: myPongROMData)
+let programROM = Chip8Program(name: "My Pong Game", contentROM: myPongGameROMData)
 ```
 
 ### Start emulation

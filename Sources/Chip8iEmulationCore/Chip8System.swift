@@ -10,13 +10,12 @@ import Foundation
 public typealias UByte = UInt8
 public typealias UShort = UInt16
 
-/// Chip8 System CPU module that executes system operation with resulting mutation of system state.
-///
-public class Chip8System {
+/// Internal Chip8 System CPU module that executes system operation with resulting mutation of system state.
+internal class Chip8System {
 
     private(set) var state: Chip8SystemState
     
-    init(font: [UByte] = Chip8System.DefaultFontSet) {
+    internal init(font: [UByte] = Chip8System.DefaultFontSet) {
         state = Chip8SystemState()
         
         // Load font set
@@ -24,12 +23,12 @@ public class Chip8System {
     }
     
     /// Load program rom into system ram at location 0x200 (512) where pc starts at default.
-    public func loadProgram(_ programROM: [UByte]) {
+    internal func loadProgram(_ programROM: [UByte]) {
         state.randomAccessMemory.replaceSubrange(512..<(512+programROM.count), with: programROM)
     }
     
     /// Execute single given operation. It takes needed data from systemState and modifies it
-    public func executeOperation(operation: Chip8Operation) {
+    internal func executeOperation(operation: Chip8Operation) {
         switch operation {
         case .ClearScreen:
             state.Output = Array(repeating: false, count: 64*32)
@@ -230,28 +229,28 @@ public class Chip8System {
         }
     }
     
-    public func fetchOperationCode(memoryLocation: UShort) -> UShort {
+    internal func fetchOperationCode(memoryLocation: UShort) -> UShort {
         let firstByte = state.randomAccessMemory[Int(memoryLocation)]
         let secondByte = state.randomAccessMemory[Int(memoryLocation + 1)]
         let opCode: UShort = (UShort(firstByte) << 8) | UShort(secondByte) // chip8 uses big endian
         return opCode
     }
     
-    public func decreaseDelayTimer() {
+    internal func decreaseDelayTimer() {
         if state.delayTimer == 0 { return }
         state.delayTimer -= 1
     }
     
-    public func decreaseSoundTimer() {
+    internal func decreaseSoundTimer() {
         if state.soundTimer == 0 { return }
         state.soundTimer -= 1
     }
     
-    public func KeyDown(key: UByte) {
+    internal func KeyDown(key: UByte) {
         state.InputKeys[key.toInt] = true
     }
     
-    public func KeyUp(key: UByte) {
+    internal func KeyUp(key: UByte) {
         state.InputKeys[key.toInt] = false
     }
 }

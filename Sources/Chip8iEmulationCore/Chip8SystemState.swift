@@ -7,7 +7,7 @@
 
 import Foundation
 
-/// Current state of the Chip8 system, including RAM, Registers, Call Stack, Timers, Program Counter, Input Keys States and Output Screen Buffer
+/// State of the emulated Chip8 system, including RAM, Registers, Call Stack, Timers, Program Counter, Input Keys States and Output Screen Buffer.
 public struct Chip8SystemState {
     /// 4096 Bytes of memory. Chip8 uses BIG ENDIAN (when saving UShort value  we save upper byte at address x and then lower byte at memory address x+1)
     public var randomAccessMemory: [UByte]
