@@ -4,21 +4,21 @@
 import PackageDescription
 
 let package = Package(
-    name: "Chip8iCore",
+    name: "Chip8iEmulationCore",
     platforms: [.iOS(.v15), .macOS(.v13)],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
-            name: "Chip8iCore",
-            targets: ["Chip8iCore"]),
+            name: "Chip8iEmulationCore",
+            targets: ["Chip8iEmulationCore"]),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "Chip8iCore"),
+            name: "Chip8iEmulationCore"),
         .testTarget(
-            name: "Chip8iCoreTests",
-            dependencies: ["Chip8iCore"]),
+            name: "Chip8iEmulationCoreTests",
+            dependencies: ["Chip8iEmulationCore"]),
     ]
 )

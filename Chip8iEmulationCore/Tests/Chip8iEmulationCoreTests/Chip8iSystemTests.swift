@@ -1,7 +1,7 @@
 import XCTest
-@testable import Chip8iCore
+@testable import Chip8iEmulationCore
 
-final class Chip8iCoreTests: XCTestCase {
+final class Chip8iSystemTests: XCTestCase {
     func testExample() throws {
         // XCTest Documentation
         // https://developer.apple.com/documentation/xctest
