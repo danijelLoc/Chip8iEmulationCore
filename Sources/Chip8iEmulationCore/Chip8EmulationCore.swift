@@ -20,10 +20,10 @@ public class Chip8EmulationCore: ObservableObject { // TODO: Refactor... target 
     private let opCodeParser: Chip8OperationParserProtocol
     
     /// Output screen buffer 64 width x 32 height. Pixel can be 0 or 1. True is turned On and False is turned Off.
-    @Published var outputScreen: [Bool] = Array(repeating: false, count: 64*32)
+    @Published public var outputScreen: [Bool] = Array(repeating: false, count: 64*32)
     /// Indicates if emulator should ply the sound. Returns (playSound, SoundTimerValue). If timer is greater than 0 playSound will be true.
     /// Important: On every change of timer value that is greater than 0 you should play short sound (tick).
-    @Published var outputSoundTimer: UByte = 0
+    @Published public var outputSoundTimer: UByte = 0
     
     /// Input keys bindings for emulation menu actions EmulationMenuControl like Pause, SaveState, etc. Initially set to DefaultEmulationMenuKeyboardBindings
     public var EmulationMenuBindings: Dictionary<Character, EmulationMenuControl> = DefaultEmulationMenuKeyboardBindings
@@ -70,6 +70,24 @@ public class Chip8EmulationCore: ObservableObject { // TODO: Refactor... target 
         }
     }
     
+    public func onKeyDown(key: Character) {
+        if let chip8Key = Chip8InputBindings[key] {
+            system.KeyDown(key: chip8Key)
+        }
+    }
+
+    public func onKeyUp(key: Character) {
+        if let chip8Key = Chip8InputBindings[key] {
+            system.KeyUp(key: chip8Key)
+        }
+        else if let menuButtonPressed = EmulationMenuBindings[key] {
+            switch menuButtonPressed {
+                case .Pause:
+                    isPaused = !isPaused
+            }
+        }
+    }
+    
     private func emulateSingleCycle() async {
         // Fetch Opcode
         let opCode: UShort = system.fetchOperationCode(memoryLocation: system.state.pc)
@@ -91,24 +109,6 @@ public class Chip8EmulationCore: ObservableObject { // TODO: Refactor... target 
             outputSoundTimer = system.state.soundTimer
         }
     }
-    
-    public func onKeyDown(key: Character) {
-        if let chip8Key = Chip8InputBindings[key] {
-            system.KeyDown(key: chip8Key)
-        }
-    }
-
-    public func onKeyUp(key: Character) {
-        if let chip8Key = Chip8InputBindings[key] {
-            system.KeyUp(key: chip8Key)
-        }
-        else if let menuButtonPressed = EmulationMenuBindings[key] {
-            switch menuButtonPressed {
-                case .Pause:
-                    isPaused = !isPaused
-            }
-        }
-    }
 }
 
 /// Represents compiled program for Chip8 system. Compiled program binary data is saved in .ch8 files for example.
@@ -116,6 +116,11 @@ public struct Chip8ProgramROM {
     public let name: String
     /// Read Only Memory - ROM binary content of the compiled program
     public let contentROM: [UByte]
+    
+    public init(name: String, contentROM: [UByte]) {
+        self.name = name
+        self.contentROM = contentROM
+    }
 }
 
 public enum EmulationMenuControl {
