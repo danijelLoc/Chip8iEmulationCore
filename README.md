@@ -2,7 +2,7 @@
 
 `Chip8iEmulationCore` is a Swift package for emulating the Chip8 system and running its programs. This package provides an emulation core that allows you to start emulation, process Chip8 program operations, handle input, and subscribe to Chip8 screen output and sound updates. 
 
-The emulation core package can be used in frontend apps on MacOS and iOS where you just have to propagate user input into the core and subscribe to output from it.
+The emulation core package can be used in frontend apps on macOS and iOS where you just have to propagate user input into the core and subscribe to output from it.
 
 ## Installation
 
@@ -49,15 +49,15 @@ To handle key press and release events:
 Use the onKeyDown and onKeyUp methods to send input to the emulator. Keys are mapped based on the `Chip8InputBindings` and `EmulationMenuBindings` dictionaries that can be modified for custom bindings.
 
 ### Observing Output
-The `outputScreen` and `outputSoundTimer` properties are marked with `@Published`, so you can use them in `SwiftUI`, `UIKit`, or `AppKit`. 
+The `outputScreen` and `outputSoundTimer` properties are marked with `@Published`, so you can subscribe to them and update the view and play the sound in `SwiftUI`, `UIKit`, or `AppKit`. 
 
 ### Screen Output Handling Example
 
 Publisher Buffer `outputScreen` is a 64x32 grid of Boolean values, representing pixel states.
 
-You can set view to reactively display screen updates from `outputScreen` buffer using `CGImage` extension method `fromMonochromeBitmap` included in the `Chip8iEmulationCore` package.
+One way to reactively display screen updates from `outputScreen` publisher buffer is using `CGImage` extension method `fromMonochromeBitmap` included in the `Chip8iEmulationCore` package.
 
-Here is example in MacOS frontend app which uses this package.
+Here is an example of this approach in macOS frontend app which uses this package. Also included in the example is initialisation of core, starting the game and subscribing to sound timer change.
 
 ```swift
     @StateObject var emulationCore = Chip8EmulationCore()
@@ -102,6 +102,12 @@ Publisher `outputSoundTimer` is the UByte value of Chip8 System Sound timer. A s
         }
     }
 ```
+
+### Usage example
+
+This is example of integrating the chip8 emulation core and running it from simple macOS emulator frontend which provides game binary and key inputs to the core, and shows output from the core.
+
+<img src="https://github.com/danijelLoc/Chip8iEmulationCore/blob/screenshots/.assets/example-frontend.png?raw=true" alt="Usage example in macos app" width="700"/>
 
 ### License
 This package is licensed under the MIT License. See the `LICENSE` file for more information
