@@ -102,6 +102,11 @@ Publisher `outputSoundTimer` is the UByte value of Chip8 System Sound timer. A s
         }
     }
 ```
+### Usage example
+
+This is example of integrating the chip8 emulation core and running it from simple macOS emulator frontend which provides game binary and key inputs to the core, and shows output from the core.
+
+<img src="./.assets/example-frontend.png?raw=true" alt="Usage example in macos app" width="500"/>
 
 ### License
 This package is licensed under the MIT License. See the `LICENSE` file for more information
