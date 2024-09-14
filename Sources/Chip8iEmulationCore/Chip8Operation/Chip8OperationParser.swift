@@ -1,6 +1,6 @@
 //
 //  Chip8OperationParser.swift
-//  Chip8iEmulator
+//  Chip8iEmulationCore
 //
 //  Created by Danijel Stracenski on 10.09.2024..
 //

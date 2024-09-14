@@ -1,6 +1,6 @@
 //
 //  Chip8System+Constants.swift
-//  Chip8iEmulator
+//  Chip8iEmulationCore
 //
 //  Created by Danijel Stracenski on 25.06.2024..
 //
