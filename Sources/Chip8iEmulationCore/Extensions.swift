@@ -36,3 +36,20 @@ extension UByte {
         return Int(self)
     }
 }
+
+extension Bool {
+    public func xor(other: Bool) -> Bool {
+        return other != self;
+    }
+    
+    /// Returns true for 1, false for 0. Otherwise throws error.
+    public static func fromOneOrZero(_ value: UByte) ->  Bool {
+        if value > 1 {
+            fatalError("Method expects 1 or 0")
+        } else if value == 1 {
+            return true;
+        } else {
+            return false;
+        }
+    }
+}

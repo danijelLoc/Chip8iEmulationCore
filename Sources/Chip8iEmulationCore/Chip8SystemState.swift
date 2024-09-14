@@ -28,8 +28,8 @@ public struct Chip8SystemState {
     /// if set above 0 system is beeping and timer is counting down. Counting at 60Hz.
     public var soundTimer: UByte
     
-    /// One dimension Byte array representing output screen (64x32). One byte represents one pixel (0: Black and 255: White), order from left top of the screen.
-    public var Output: [UByte] // 64x32
+    /// One dimension Byte array representing output screen (64 width x 32 height). One bit represents one pixel, order from left top of the screen. Rows saved in on dimensional array one after another.
+    public var Output: [Bool] // 64x32
     /// Boolean Array containing states of all 16 keys of Chip8. System has buttons marked with Hex digits from 0,1,2 ... E, F. If value at index X is set to True it means that X-th button is pressed.
     public var InputKeys: [Bool] // 16 keys
     
@@ -52,7 +52,7 @@ public struct Chip8SystemState {
         self.delayTimer = 0
         self.soundTimer = 0
         
-        self.Output = Array(repeating: 0, count: 64*32)
+        self.Output = Array(repeating: false, count: 64*32)
         self.InputKeys = Array(repeating: false, count: 16)
         self.InputKeyIndexToBeReleased = nil
         

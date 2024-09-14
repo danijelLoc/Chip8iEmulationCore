@@ -32,7 +32,7 @@ public class Chip8System {
     public func executeOperation(operation: Chip8Operation) {
         switch operation {
         case .ClearScreen:
-            state.Output = Array(repeating: 0, count: 64*32)
+            state.Output = Array(repeating: false, count: 64*32)
             state.pc += 2
             break
             
@@ -197,11 +197,11 @@ public class Chip8System {
             let spriteStartAddress = Int(state.indexRegister)
             let spriteEndAddress = spriteStartAddress + height // Chip8 Spite is always 8 pixels (8 bits in memory) wide. One memory address stores one row of sprite. So whole sprite is <height> bytes long
             let sprite = Array(state.randomAccessMemory[spriteStartAddress..<spriteEndAddress])
-            for j in 0..<height {
+            for j in 0..<height { // row by row
                 if locationY+j >= 32 {
                     break
                 }
-                for i in 0..<8 {
+                for i in 0..<8 { // column by column (pixels in one row)
                     if locationX+i >= 64 {
                         break
                     }
@@ -209,14 +209,10 @@ public class Chip8System {
                         continue
                     }
                     let pixelBefore = state.Output[locationX+i + (locationY+j)*64]
-                    let spritePixel = (sprite[j] & UInt8(NSDecimalNumber(decimal: pow(2, (7-i))).intValue)) >> (7-i)
-                    let pixel = spritePixel == 0 ? state.Output[locationX+i + (locationY+j)*64] : state.Output[locationX+i + (locationY+j)*64] ^ spritePixel
-                    if pixel > 1 {
-                        print("Error unexpected pixel value") // TODO: THROW
-                        return
-                    }
+                    let spritePixel = Bool.fromOneOrZero((sprite[j] & UInt8(NSDecimalNumber(decimal: pow(2, (7-i))).intValue)) >> (7-i))
+                    let pixel = spritePixel == false ? pixelBefore : pixelBefore.xor(other: spritePixel)
                     state.Output[locationX+i + (locationY+j)*64] = pixel
-                    if (pixel != pixelBefore && pixelBefore == 1) {
+                    if (pixel != pixelBefore && pixelBefore == true) {
                         state.registers[15] = 1 // collision
                     }
                 }
@@ -224,11 +220,11 @@ public class Chip8System {
             state.pc += 2
             break
         case .Unknown(let operationCode):
-            print("!!!!! Skipping unknown operation code: \(operationCode.fullDescription)")
+            print("<!!!> Skipping unknown operation code: \(operationCode.fullDescription)")
             state.pc += 2
             break
         default:
-            print("!!!!! Skipping not implemented operation: \(operation)")
+            print("<!!!> Skipping not implemented operation: \(operation)")
             state.pc += 2
             break
         }

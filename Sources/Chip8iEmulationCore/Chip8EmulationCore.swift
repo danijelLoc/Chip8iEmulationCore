@@ -82,7 +82,7 @@ public class Chip8EmulationCore: ObservableObject { // TODO: Refactor... target 
     
     private func publishOutput() async {
         await MainActor.run {
-            outputScreen = system.state.Output.map { byte in byte > 0 }
+            outputScreen = system.state.Output
         }
     }
     
