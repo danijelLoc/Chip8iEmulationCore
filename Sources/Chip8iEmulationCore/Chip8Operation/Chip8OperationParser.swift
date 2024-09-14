@@ -110,7 +110,6 @@ internal struct Chip8OperationParser: Chip8OperationParserProtocol {
             return .SoundTimerSet(registerIndex: registerXIndex)
             
         default:
-            //print("!!!! Unknown operation code \(operationCode.hexDescription)")
             return .Unknown(operationCode: operationCode)
         }
     }

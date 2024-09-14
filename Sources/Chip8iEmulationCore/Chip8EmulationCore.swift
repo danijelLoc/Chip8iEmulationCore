@@ -42,10 +42,11 @@ public class Chip8EmulationCore: ObservableObject {
         self.opCodeParser = Chip8OperationParser()
     }
     
-    /// Start emulation of the Chip8 program
-    public func emulate(program: Chip8Program) async {
-        // TODO: refactor this... easier, pause, resume, execute command by command(what about delay and sound timer...), load, save...
-        
+    /// Starts emulation of the Chip8 program. Programs for Chip8 are executed indefinitely (infinite loop).
+    ///
+    /// Logger is by default EmulationConsoleLogger, to disable logging set it to nil, or replace it with your own implementation, for example logging into file.
+    public func emulate(program: Chip8Program, logger: EmulationLoggerProtocol? = EmulationConsoleLogger()) async {
+
         system.loadProgram(program.contentROM)
         
         while(true) {
@@ -54,7 +55,7 @@ public class Chip8EmulationCore: ObservableObject {
             
             let timeStart = Date()
             for _ in 0..<systemClockCountPerFrame {
-                await emulateSingleCycle()
+                await emulateSingleCycle(logger: logger)
             }
             let timeEnd = Date()
             
@@ -64,10 +65,9 @@ public class Chip8EmulationCore: ObservableObject {
             /// To ensure constant target frame rate / frame time. we have to introduce sleep interval.
             let sleepPeriodForTargetFrameTime = targetFrameTime > performedInstructionsInterval ? targetFrameTime - performedInstructionsInterval : 0
             
-            try? await Task.sleep(nanoseconds: UInt64(sleepPeriodForTargetFrameTime * 1_000_000_000)) // TODO: refactor
+            try? await Task.sleep(nanoseconds: UInt64(sleepPeriodForTargetFrameTime * 1_000_000_000))
             
-            // TODO: what if it's different frequency for frame-rate and timers?
-            // TODO: (timers in its own task...)
+            // TODO: what if it's different frequency for frame-rate and timers? timers in its own task...
             // Update timers
             system.decreaseDelayTimer()
             system.decreaseSoundTimer()
@@ -95,14 +95,15 @@ public class Chip8EmulationCore: ObservableObject {
         }
     }
     
-    private func emulateSingleCycle() async {
+    private func emulateSingleCycle(logger: EmulationLoggerProtocol?) async {
         // Fetch Opcode
         let opCode: UShort = system.fetchOperationCode(memoryLocation: system.state.pc)
         // Decode Opcode
         let operation = opCodeParser.decode(operationCode: opCode)
-        print("\(opCode.hexDescription) -> \(operation)")
+        logger?.log("Parsed \(opCode.hexDescription) -> \(operation)", level: .info)
+        
         // Execute Opcode
-        system.executeOperation(operation: operation)
+        system.executeOperation(operation: operation, logger: logger)
         
         // Send debug info
         await MainActor.run {

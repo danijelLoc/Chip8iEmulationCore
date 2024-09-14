@@ -29,15 +29,15 @@ final class Chip8iSystemTests: XCTestCase {
     
     func testEmulateCycleAndPcChange() async {
         let system = Chip8System()
-        let programROM: [UByte] = [0x00, 0x01]
+        let programROM: [UByte] = [0x00, 0xE0]
         system.loadProgram(programROM)
         
         XCTAssertEqual(0x200, system.state.pc)
         var commandToBeExecuted = system.fetchOperationCode(memoryLocation: system.state.pc)
-        XCTAssertEqual(UShort(0x0001), commandToBeExecuted) // Chip8 uses big endian
+        XCTAssertEqual(UShort(0x00E0), commandToBeExecuted) // Chip8 uses big endian
         
         let parser = Chip8OperationParser();
-        system.executeOperation(operation: parser.decode(operationCode: commandToBeExecuted))
+        system.executeOperation(operation: parser.decode(operationCode: commandToBeExecuted), logger: EmulationConsoleLogger())
         
         XCTAssertEqual(0x202, system.state.pc)
         commandToBeExecuted = system.fetchOperationCode(memoryLocation: system.state.pc)

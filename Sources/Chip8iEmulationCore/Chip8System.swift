@@ -28,7 +28,7 @@ internal class Chip8System {
     }
     
     /// Execute single given operation. It takes needed data from systemState and modifies it
-    internal func executeOperation(operation: Chip8Operation) {
+    internal func executeOperation(operation: Chip8Operation, logger: EmulationLoggerProtocol?) {
         switch operation {
         case .ClearScreen:
             state.Output = Array(repeating: false, count: 64*32)
@@ -67,7 +67,7 @@ internal class Chip8System {
             }
         case .ConditionalSkipKeyDown(let registerIndex, let isKeyDown):
             let registerValue = state.registers[registerIndex]
-            let keyState = state.InputKeys[registerValue.toInt] // TODO: This could easily be out of range and crash the app... throw error? each app should handle it.
+            let keyState = state.InputKeys[registerValue.toInt]
             if isKeyDown && keyState || !isKeyDown && !keyState {
                 state.pc += 4
             } else {
@@ -219,11 +219,11 @@ internal class Chip8System {
             state.pc += 2
             break
         case .Unknown(let operationCode):
-            print("<!!!> Skipping unknown operation code: \(operationCode.fullDescription)")
+            logger?.log("Skipping unknown operation code: \(operationCode.fullDescription)", level: .warning)
             state.pc += 2
             break
         default:
-            print("<!!!> Skipping not implemented operation: \(operation)")
+            logger?.log("Skipping not implemented operation: \(operation)", level: .warning)
             state.pc += 2
             break
         }
