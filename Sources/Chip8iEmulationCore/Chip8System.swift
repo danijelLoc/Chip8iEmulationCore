@@ -12,7 +12,7 @@ public typealias UShort = UInt16
 
 /// Chip8 System CPU module that executes system operation with resulting mutation of system state.
 ///
-class Chip8System {
+public class Chip8System {
 
     private(set) var state: Chip8SystemState
     

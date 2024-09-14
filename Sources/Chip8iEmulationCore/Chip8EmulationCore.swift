@@ -1,5 +1,5 @@
 //
-//  Chip8EmuCore.swift
+//  Chip8EmulationCore.swift
 //  Chip8iEmulationCore
 //
 //  Created by Danijel Stracenski on 28.05.2024..
@@ -7,16 +7,9 @@
 
 import Foundation
 
-enum EmulationMenuControl {
-    case Pause
-    case FastForward
-    case SaveState
-    case LoadState
-    case Rewind
-}
 
-
-class Chip8EmuCore: ObservableObject { // TODO: Refactor... target app should insert all those parameters
+/// Emulation Core that should be used for starting emulation, sending inputs and subscribing to its screen output.
+public class Chip8EmulationCore: ObservableObject { // TODO: Refactor... target app should insert all those parameters
     private var system: Chip8System
     /// Number of instructions done in a second. Usually shown in Hz. Default for most programs is 700 Hz
     private var systemClockCount = 600
@@ -32,18 +25,20 @@ class Chip8EmuCore: ObservableObject { // TODO: Refactor... target app should in
     /// Important: On every change of timer value that is greater than 0 you should play short sound (tick).
     @Published var outputSoundTimer: UByte = 0
     
-    private(set) var EmulationMenuBindings: Dictionary<Character, EmulationMenuControl> = Dictionary() // TODO: CUSTOM SETUP SCREEN
-    private(set) var Chip8InputBindings: Dictionary<Character, UByte> = Dictionary() // TODO: CUSTOM SETUP SCREEN
+    /// Input keys bindings for emulation menu actions EmulationMenuControl like Pause, SaveState, etc. Initially set to DefaultEmulationMenuKeyboardBindings
+    public var EmulationMenuBindings: Dictionary<Character, EmulationMenuControl> = DefaultEmulationMenuKeyboardBindings
+    /// Input keys bindings for Chip8 keys. Chip8 has 16 keys (0 to F). Initially set to DefaultChip8KeyboardBindings
+    public var Chip8InputBindings: Dictionary<Character, UByte> = DefaultChip8KeyboardBindings
     
     init() {
         self.system = Chip8System()
         self.opCodeParser = Chip8OperationParser()
     }
     
-    // TODO: refactor this... easier, pause, resume, execute command by command, load, save...
-    public func emulate(_ programName: String) async {
+    /// Start emulation of the Chip8 program
+    public func emulate(programName: String) async {
+        // TODO: refactor this... easier, pause, resume, execute command by command(what about delay and sound timer...), load, save...
         // Set up render system and register input callbacks
-        setupInput();
         
         let program = readProgramFromFile(fileName: programName)
         guard let program = program else { return }
@@ -89,22 +84,12 @@ class Chip8EmuCore: ObservableObject { // TODO: Refactor... target app should in
         system.executeOperation(operation: operation)
     }
     
-    private func readProgramFromFile(fileName: String) -> Chip8Program? {
-        guard let fileUrl = Bundle.main.url(forResource: fileName, withExtension: Chip8Program.fileExtension) else { return nil }
+    private func readProgramFromFile(fileName: String) -> Chip8ProgramROM? {
+        guard let fileUrl = Bundle.main.url(forResource: fileName, withExtension: Chip8ProgramROM.fileExtension) else { return nil }
         guard let data = try? Data(contentsOf: fileUrl) else { return nil }
         // print(data.flatMap{String(format:"%02X", $0)})
         let romData = data.compactMap {$0}
-        return Chip8Program(name: fileName, contentROM: romData)
-    }
-    
-    private func setupInput() {
-        Chip8InputBindings = [
-            "1": 1, "2": 2, "3": 3, "4": 0xC,
-            "q": 4, "w": 5, "e": 6, "r": 0xD,
-            "a": 7, "s": 8, "d": 9, "f": 0xE,
-            "y": 0xA, "x": 0, "c": 0xB, "v": 0xF
-        ]
-        EmulationMenuBindings = ["p": .Pause, "l": .FastForward]
+        return Chip8ProgramROM(name: fileName, contentROM: romData)
     }
     
     private func publishOutput() async {
@@ -119,13 +104,13 @@ class Chip8EmuCore: ObservableObject { // TODO: Refactor... target app should in
         }
     }
     
-    func onKeyDown(key: Character) {
+    public func onKeyDown(key: Character) {
         if let chip8Key = Chip8InputBindings[key] {
             system.KeyDown(key: chip8Key)
         }
     }
 
-    func onKeyUp(key: Character) {
+    public func onKeyUp(key: Character) {
         if let chip8Key = Chip8InputBindings[key] {
             system.KeyUp(key: chip8Key)
         }
@@ -140,13 +125,20 @@ class Chip8EmuCore: ObservableObject { // TODO: Refactor... target app should in
     }
 }
 
-///
 /// Represents compiled program for Chip8 system. Compiled program binary data is saved in .ch8 files.
-///
-struct Chip8Program {
+public struct Chip8ProgramROM {
     public static let fileExtension = "ch8"
     
     public let name: String
     /// Read Only Memory - ROM binary content of the compiled program
     public let contentROM: [UByte]
+}
+
+public enum EmulationMenuControl {
+    case Pause
+// TODO: Implement
+//    case FastForward
+//    case SaveState
+//    case LoadState
+//    case Rewind // maybe later on...
 }
