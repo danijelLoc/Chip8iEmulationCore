@@ -22,6 +22,7 @@ public class Chip8EmulationCore: ObservableObject {
     private let opCodeParser: Chip8OperationParserProtocol
     
     /// Output screen buffer 64 width x 32 height. Pixel can be 0 or 1. True is turned On and False is turned Off.
+    /// One example of how to subscribe to this data is to create CGImage from it using fromMonochromeBitmap extension method and then show it in Image element.
     @Published public private(set) var outputScreen: [Bool] = Array(repeating: false, count: 64*32)
     /// Indicates if emulator should ply the sound. Returns (playSound, SoundTimerValue). If timer is greater than 0 playSound will be true.
     /// Important: On every change of timer value that is greater than 0 you should play short sound (tick).

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CoreGraphics
 
 extension UShort {
     public var fullDescription: String {
@@ -51,6 +52,38 @@ extension Bool {
         } else {
             return false;
         }
+    }
+}
+
+extension CGImage {
+    /// Tries to create the CGImage from pixels data. Can be used to display screen output of the Chip8EmulationCore.
+    public static func fromMonochromeBitmap(_ pixels: [Bool], width: Int, height: Int) -> CGImage? {
+        guard width > 0 && height > 0 else { return nil }
+        guard pixels.count == width * height else { return nil }
+        
+        let grayColorSpace = CGColorSpaceCreateDeviceGray()
+        let bitmapInfo: CGBitmapInfo = [CGBitmapInfo(rawValue: CGImageAlphaInfo.none.rawValue), CGBitmapInfo(rawValue: CGImageByteOrderInfo.orderDefault.rawValue)]
+
+        var data: [UByte] = pixels.map {x in (x ? 1 : 0)  * 255 }
+
+        guard let providerRef = CGDataProvider(data: NSData(bytes: &data, length: data.count * MemoryLayout<UInt8>.size))
+        else { return nil }
+
+        guard let cgImage = CGImage(
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bitsPerPixel: 8,
+            bytesPerRow: width * MemoryLayout<UInt8>.size,
+            space: grayColorSpace,
+            bitmapInfo: bitmapInfo,
+            provider: providerRef,
+            decode: nil,
+            shouldInterpolate: true,
+            intent: .defaultIntent
+        ) else { return nil }
+
+        return cgImage
     }
 }
 
