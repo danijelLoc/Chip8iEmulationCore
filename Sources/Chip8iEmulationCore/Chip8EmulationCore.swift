@@ -30,7 +30,7 @@ public class Chip8EmulationCore: ObservableObject { // TODO: Refactor... target 
     /// Input keys bindings for Chip8 keys. Chip8 has 16 keys (0 to F). Initially set to DefaultChip8KeyboardBindings
     public var Chip8InputBindings: Dictionary<Character, UByte> = DefaultChip8KeyboardBindings
     
-    init() {
+    public init() {
         self.system = Chip8System()
         self.opCodeParser = Chip8OperationParser()
     }
