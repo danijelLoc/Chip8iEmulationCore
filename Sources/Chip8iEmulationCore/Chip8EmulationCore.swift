@@ -36,12 +36,8 @@ public class Chip8EmulationCore: ObservableObject { // TODO: Refactor... target 
     }
     
     /// Start emulation of the Chip8 program
-    public func emulate(programName: String) async {
+    public func emulate(program: Chip8ProgramROM) async {
         // TODO: refactor this... easier, pause, resume, execute command by command(what about delay and sound timer...), load, save...
-        // Set up render system and register input callbacks
-        
-        let program = readProgramFromFile(fileName: programName)
-        guard let program = program else { return }
         
         system.loadProgram(program.contentROM)
         
@@ -84,14 +80,6 @@ public class Chip8EmulationCore: ObservableObject { // TODO: Refactor... target 
         system.executeOperation(operation: operation)
     }
     
-    private func readProgramFromFile(fileName: String) -> Chip8ProgramROM? {
-        guard let fileUrl = Bundle.main.url(forResource: fileName, withExtension: Chip8ProgramROM.fileExtension) else { return nil }
-        guard let data = try? Data(contentsOf: fileUrl) else { return nil }
-        // print(data.flatMap{String(format:"%02X", $0)})
-        let romData = data.compactMap {$0}
-        return Chip8ProgramROM(name: fileName, contentROM: romData)
-    }
-    
     private func publishOutput() async {
         await MainActor.run {
             outputScreen = system.state.Output.map { byte in byte > 0 }
@@ -118,17 +106,13 @@ public class Chip8EmulationCore: ObservableObject { // TODO: Refactor... target 
             switch menuButtonPressed {
                 case .Pause:
                     isPaused = !isPaused
-                default:
-                    return
             }
         }
     }
 }
 
-/// Represents compiled program for Chip8 system. Compiled program binary data is saved in .ch8 files.
+/// Represents compiled program for Chip8 system. Compiled program binary data is saved in .ch8 files for example.
 public struct Chip8ProgramROM {
-    public static let fileExtension = "ch8"
-    
     public let name: String
     /// Read Only Memory - ROM binary content of the compiled program
     public let contentROM: [UByte]

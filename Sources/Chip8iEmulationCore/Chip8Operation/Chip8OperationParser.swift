@@ -7,12 +7,12 @@
 
 import Foundation
 
-public protocol Chip8OperationParserProtocol {
+internal protocol Chip8OperationParserProtocol {
     /// Decode operation code (UShort) into Chip8Operation with its parameters.
     func decode(operationCode: UShort) -> Chip8Operation;
 }
 
-public struct Chip8OperationParser: Chip8OperationParserProtocol {
+internal struct Chip8OperationParser: Chip8OperationParserProtocol {
     public func decode(operationCode: UShort) -> Chip8Operation {
         // Extract common indices
         let registerXIndex = Int((operationCode & 0x0F00) >> 8)
