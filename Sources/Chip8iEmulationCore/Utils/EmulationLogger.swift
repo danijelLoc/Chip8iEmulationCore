@@ -1,6 +1,6 @@
 //
-//  Utils.swift
-//  
+//  EmulationLogger.swift
+//
 //
 //  Created by Danijel Stracenski on 14.09.2024..
 //

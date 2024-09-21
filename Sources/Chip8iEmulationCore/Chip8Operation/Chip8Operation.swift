@@ -7,8 +7,6 @@
 
 import Foundation
 
-
-
 public enum Chip8Operation {
     
     /// Unknown operation whose code could not have been parsed

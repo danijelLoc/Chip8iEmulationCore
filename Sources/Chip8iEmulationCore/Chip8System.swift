@@ -236,6 +236,10 @@ internal class Chip8System {
         return opCode
     }
     
+    internal func loadState(_ newState: Chip8SystemState) {
+        state = newState
+    }
+    
     internal func decreaseDelayTimer() {
         if state.delayTimer == 0 { return }
         state.delayTimer -= 1

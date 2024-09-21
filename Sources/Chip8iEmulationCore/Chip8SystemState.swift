@@ -8,8 +8,8 @@
 import Foundation
 
 /// State of the emulated Chip8 system, including RAM, Registers, Call Stack, Timers, Program Counter, Input Keys States and Output Screen Buffer.
-public struct Chip8SystemState {
-    /// 4096 Bytes of memory. Chip8 uses BIG ENDIAN (when saving UShort value  we save upper byte at address x and then lower byte at memory address x+1)
+public struct Chip8SystemState: Codable {
+    /// 4096 Bytes of memory. Chip8 uses BIG ENDIAN (when saving UShort value  we save upper byte at address x and then lower byte at memory address x+1). Whole program ROM is loaded into the RAM at starting PC address of 0x200.
     public var randomAccessMemory: [UByte]
     
     /// 15 general purpose registers and 1 "carry-flag" register. Starting from V0 to VF (register with index 0xF or 15 in decimal)
@@ -58,4 +58,12 @@ public struct Chip8SystemState {
         
         self.fontStartingLocation = 0x50 // default location for font 0x50 (decimal 80)
     }
+}
+
+/// A wrapper around the emulated program data id and Chip8SystemState. Saved system state can only be used with specific program/game loaded into the system.
+public struct EmulationState: Codable {
+    /// Unique Id of the program/game ROM data that was loaded into the Chip8System
+    public let programContentHash: String
+    /// State of Chip8 System with all its registers, stack, memory and output buffer
+    public let systemState: Chip8SystemState
 }
