@@ -78,21 +78,38 @@ public class Chip8EmulationCore: ObservableObject {
         }
     }
     
+    private func emulateSingleCycle(logger: EmulationLoggerProtocol?) async {
+        // Fetch Opcode
+        let opCode: UShort = system.fetchOperationCode(memoryLocation: system.state.pc)
+        // Decode Opcode
+        let operation = opCodeParser.decode(operationCode: opCode)
+        logger?.log("Parsed \(opCode.hexDescription) -> \(operation)", level: .info)
+        
+        // Execute Operation
+        system.executeOperation(operation: operation, logger: logger)
+        
+        // Send debug info
+        await MainActor.run {
+            debugSystemStateInfo = system.state
+            debugPreviousCodeAndOperationInfo = (opCode, operation)
+        }
+    }
+    
     /// Chip8 Gameplay key pressed down. See Chip8Key enum for more information.
     public func onKeyDown(key: EmulationControls.Chip8Key) {
-        system.KeyDown(key: key.rawValue)
+        system.keyDown(key: key.rawValue)
     }
 
     /// Chip8 Gameplay key released. See Chip8Key enum for more information.
     public func onKeyUp(key: EmulationControls.Chip8Key) {
-        system.KeyUp(key: key.rawValue)
+        system.keyUp(key: key.rawValue)
     }
     
     public func togglePause() {
         isPaused = !isPaused
     }
     
-    
+    /// Loads emulation state if it belongs to the current loaded program
     public func loadState(_ newState: EmulationState) {
         if program?.contentHash == newState.programContentHash {
             system.loadState(newState.systemState)
@@ -103,23 +120,6 @@ public class Chip8EmulationCore: ObservableObject {
     public func exportState() -> EmulationState? {
         guard let program = program else { return nil }
         return EmulationState(programContentHash: program.contentHash, systemState: system.state)
-    }
-    
-    private func emulateSingleCycle(logger: EmulationLoggerProtocol?) async {
-        // Fetch Opcode
-        let opCode: UShort = system.fetchOperationCode(memoryLocation: system.state.pc)
-        // Decode Opcode
-        let operation = opCodeParser.decode(operationCode: opCode)
-        logger?.log("Parsed \(opCode.hexDescription) -> \(operation)", level: .info)
-        
-        // Execute Opcode
-        system.executeOperation(operation: operation, logger: logger)
-        
-        // Send debug info
-        await MainActor.run {
-            debugSystemStateInfo = system.state
-            debugPreviousCodeAndOperationInfo = (opCode, operation)
-        }
     }
     
     private func publishOutput() async {

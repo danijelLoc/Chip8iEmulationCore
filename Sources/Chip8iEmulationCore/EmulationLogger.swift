@@ -12,13 +12,6 @@ public protocol EmulationLoggerProtocol {
     func log(_ message: String, level: EmulationLogLevel)
 }
 
-/// Enum to define different emulation logging levels.
-public enum EmulationLogLevel: String {
-    case info = "INFO"
-    case warning = "WARNING"
-    case error = "ERROR"
-}
-
 /// A simple console logger that prints emulation log messages in the console.
 public class EmulationConsoleLogger: EmulationLoggerProtocol {
     private let includedLevels: [EmulationLogLevel]
@@ -33,4 +26,11 @@ public class EmulationConsoleLogger: EmulationLoggerProtocol {
             print("[\(level.rawValue)] \(message)")
         }
     }
+}
+
+/// Enum to define different emulation logging levels.
+public enum EmulationLogLevel: String {
+    case info = "INFO"
+    case warning = "WARNING"
+    case error = "ERROR"
 }

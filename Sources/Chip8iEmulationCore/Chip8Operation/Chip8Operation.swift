@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum Chip8Operation {
+public enum Chip8Operation: Equatable {
     
     /// Unknown operation whose code could not have been parsed
     case Unknown(operationCode: UShort)
@@ -86,9 +86,9 @@ public enum Chip8Operation {
     /// 
     /// 8XY4 - Set VX into VX + VY
     /// 
-    /// 8XY4 - Set VX into VX - VY
+    /// 8XY5 - Set VX into VX - VY
     /// 
-    /// 8XY4 - Set VX into VY - VX
+    /// 8XY7 - Set VX into VY - VX
     /// 
     /// 8XY6 - Set VX into VX >> 1
     /// 
