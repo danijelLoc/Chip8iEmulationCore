@@ -130,7 +130,7 @@ public enum Chip8Operation: Equatable {
     case SoundTimerSet(registerIndex: Int)
     
     /// Draw sprite that  has given height at screen location pX = value in register with index X, pY= value in register with index Y. Sprite is fetched from memory starting at address stored in index register I. 
-    /// One pixel is one bit so sprite width is always 8 pixels, hence one pixel row fits into one memory address. Sprite is saved in memory addresses I..<I+height.
+    /// One pixel is one bit so sprite width is always 8 pixels, hence one pixel row fits into one memory address. Sprite is saved in memory addresses I..<I+height. Height is 4 bit value 0..F.
     /// If any pixel is turned off after this, indicating collision, then value of register 15 (VF) is set to 1.
     ///
     /// DXYN - draws N pixels tall sprite from memory location that Index register has onto screen at location pX = value of X register, pY= value of Y register

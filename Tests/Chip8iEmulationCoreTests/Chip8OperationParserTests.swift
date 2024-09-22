@@ -27,3 +27,6 @@ final class Chip8OperationParserTests: XCTestCase {
         XCTAssertEqual(Chip8Operation.DrawSprite(height: 0xF, registerXIndex: 0xF, registerYIndex: 0xF), parser.decode(operationCode: 0xDFFF))
     }
 }
+
+
+
