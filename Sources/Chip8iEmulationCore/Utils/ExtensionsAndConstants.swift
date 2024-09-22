@@ -8,6 +8,9 @@
 import Foundation
 import CoreGraphics
 
+public typealias UByte = UInt8
+public typealias UShort = UInt16
+
 extension UShort {
     public var fullDescription: String {
         let bits = String(self, radix: 2).padding(toLength: 16, withPad: "0", startingAt: 0)
@@ -87,11 +90,12 @@ extension CGImage {
     }
 }
 
-extension Chip8System {
+extension Chip8SystemState {
     ///
     /// Chip8 only supports font with 16 letters  (0,1,...,9,A,....F)
     /// Reasons: memory constraints and input that also has 16 keys, so Hexadecimal digits were chosen for default font.
-    /// This font is saved in RAM and can then be replaced by game ROM when executed. Size 80 Bytes or in hex 0x50 Bytes.
+    /// This font is saved in RAM and can then be replaced by game ROM when executed. 
+    /// Size of the set is 80 Bytes (each character takes 5 bytes where one pixel row is 1 byte ->  so character takes 8x5 pixels on the screen).
     ///
     public static let DefaultFontSet: [UByte] = [
         0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -111,4 +115,49 @@ extension Chip8System {
         0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
         0xF0, 0x80, 0xF0, 0x80, 0x80  // F
     ]
+}
+
+extension Array<Bool> {
+    public func getSelectedArea(locationX: Int, locationY: Int, selectedWidth: Int, selectedHeight: Int, totalWidth: Int, totalHeight: Int) -> [Bool]? {
+        guard totalWidth * totalHeight == self.count &&
+                locationX + selectedWidth < totalWidth &&
+                locationY + selectedHeight < totalHeight &&
+                locationX >= 0 && locationY >= 0 &&
+                selectedHeight >= 0 && selectedWidth >= 0 &&
+                totalHeight >= 0 && totalWidth >= 0
+        else { return nil }
+        
+        var output: [Bool] = []
+        for i in locationY..<locationY+selectedHeight {
+            var rowPixels: [Bool] = []
+            for j in locationX..<locationX+selectedWidth {
+                let index = i * totalWidth + j
+                rowPixels.append(self[index])
+            }
+            output.append(contentsOf: rowPixels)
+        }
+        
+        return output
+    }
+    
+    /// Returns cropped image area as bytes rows where one pixel(bool) is one bit. Max width is 8 (Chip8 uses sprites with max width of 8, and max height of 15).
+    public func toRowsBytes(totalWidth: Int, totalHeight: Int) -> [UByte]? {
+        guard totalWidth * totalHeight == self.count &&
+                totalHeight >= 0 && totalWidth >= 0 && totalWidth <= 8
+        else { return nil }
+        
+        var output: [UByte] = []
+        for i in 0..<totalHeight {
+            var rowByte: UByte = 0
+            for j in 0..<totalWidth {
+                let index = i * totalWidth + j
+                if self[index] {
+                    rowByte |= (1 << (7 - j))
+                }
+            }
+            output.append(rowByte)
+        }
+        
+        return output
+    }
 }

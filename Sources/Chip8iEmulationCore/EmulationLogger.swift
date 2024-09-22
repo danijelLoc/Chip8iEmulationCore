@@ -26,6 +26,28 @@ public class EmulationConsoleLogger: EmulationLoggerProtocol {
             print("[\(level.rawValue)] \(message)")
         }
     }
+    
+    /// Helper method that returns multi-row string representation of screen buffer. Useful for debugging
+    public static func getStringOutput(_ pixels: [Bool], width: Int, height: Int) -> String {
+        var output = ""
+        for i in 0..<height {
+            var rowString = ""
+            for j in 0..<width {
+                let index = i * width + j
+                rowString += pixels[index] ? "██" : "{}"
+            }
+            output = output + rowString + "\n"
+        }
+        
+        return output
+    }
+}
+
+/// Errors that terminate the emulation
+public enum EmulationError: Error, Equatable {
+    case unknownOpcode(opcode: UShort)
+    /// If address is not lower than 0xFFF or 4095 (operation code is 2 bytes so the second one will be out of bounds...)
+    case opcodeFetchError(address: UShort)
 }
 
 /// Enum to define different emulation logging levels.

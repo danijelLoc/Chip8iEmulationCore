@@ -7,17 +7,16 @@
 
 import Foundation
 
-public typealias UByte = UInt8
-public typealias UShort = UInt16
 
 /// Internal Chip8 System CPU module that executes system operation with resulting mutation of system state.
 internal class Chip8System {
 
     private(set) var state: Chip8SystemState
+    private var logger: EmulationLoggerProtocol?
     
-    internal init(font: [UByte] = Chip8System.DefaultFontSet) {
+    internal init(font: [UByte] = Chip8SystemState.DefaultFontSet, logger: EmulationLoggerProtocol? = .none) {
         state = Chip8SystemState()
-        
+        self.logger = logger
         // Load font set
         state.randomAccessMemory.replaceSubrange(state.fontStartingLocation.toInt..<(state.fontStartingLocation.toInt+80), with: font)
     }
@@ -28,7 +27,7 @@ internal class Chip8System {
     }
     
     /// Execute single given operation. It takes needed data from systemState and modifies it
-    internal func executeOperation(operation: Chip8Operation, logger: EmulationLoggerProtocol?) {
+    internal func executeOperation(operation: Chip8Operation) throws {
         switch operation {
         case .ClearScreen:
             state.Output = Array(repeating: false, count: 64*32)
@@ -196,21 +195,21 @@ internal class Chip8System {
             let spriteStartAddress = Int(state.indexRegister)
             let spriteEndAddress = spriteStartAddress + height // Chip8 Spite is always 8 pixels (8 bits in memory) wide. One memory address stores one row of sprite. So whole sprite is <height> bytes long
             let sprite = Array(state.randomAccessMemory[spriteStartAddress..<spriteEndAddress])
-            for j in 0..<height { // row by row
-                if locationY+j >= 32 {
+            for i in 0..<height { // row by row
+                if locationY+i >= 32 {
                     break
                 }
-                for i in 0..<8 { // column by column (pixels in one row)
-                    if locationX+i >= 64 {
+                for j in 0..<8 { // column by column (pixels in one row)
+                    if locationX+j >= 64 {
                         break
                     }
-                    if locationX+i + (locationY+j)*64 >= state.Output.count {
+                    if locationX+j + (locationY+i)*64 >= state.Output.count {
                         continue
                     }
-                    let pixelBefore = state.Output[locationX+i + (locationY+j)*64]
-                    let spritePixel = Bool.fromOneOrZero((sprite[j] & UInt8(NSDecimalNumber(decimal: pow(2, (7-i))).intValue)) >> (7-i))
+                    let pixelBefore = state.Output[locationX+j + (locationY+i)*64]
+                    let spritePixel = Bool.fromOneOrZero((sprite[i] & UInt8(NSDecimalNumber(decimal: pow(2, (7-j))).intValue)) >> (7-j))
                     let pixel = spritePixel == false ? pixelBefore : pixelBefore.xor(other: spritePixel)
-                    state.Output[locationX+i + (locationY+j)*64] = pixel
+                    state.Output[locationX+j + (locationY+i)*64] = pixel
                     if (pixel != pixelBefore && pixelBefore == true) {
                         state.registers[15] = 1 // collision
                     }
@@ -219,13 +218,17 @@ internal class Chip8System {
             state.pc += 2
             break
         case .Unknown(let operationCode):
-            logger?.log("Skipping unknown operation with code: \(operationCode.fullDescription)", level: .warning)
-            state.pc += 2
-            break
+            logger?.log("Unknown operation with code: \(operationCode.fullDescription)", level: .error)
+            throw EmulationError.unknownOpcode(opcode: operationCode)
         }
     }
     
-    internal func fetchOperationCode(memoryLocation: UShort) -> UShort {
+    
+    internal func fetchOperationCode(memoryLocation: UShort) throws -> UShort  {
+        guard memoryLocation < 0xFFF else {
+            logger?.log("Opcode memory location out of bounds, address: \(memoryLocation)", level: .error)
+            throw EmulationError.opcodeFetchError(address: memoryLocation)
+        }
         let firstByte = state.randomAccessMemory[Int(memoryLocation)]
         let secondByte = state.randomAccessMemory[Int(memoryLocation + 1)]
         let opCode: UShort = (UShort(firstByte) << 8) | UShort(secondByte) // chip8 uses big endian
@@ -234,6 +237,7 @@ internal class Chip8System {
     
     internal func loadState(_ newState: Chip8SystemState) {
         state = newState
+        logger?.log("Loaded state", level: .info)
     }
     
     internal func decreaseDelayTimer() {
