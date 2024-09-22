@@ -5,7 +5,7 @@ import Combine
 final class Chip8EmulationCoreTests: XCTestCase {
     
     func testEmulationAndErrorHandling() async throws {
-        let core = Chip8EmulationCore(logger: EmulationConsoleLogger(includedLevels: [.warning, .error]));
+        let core = Chip8EmulationCore(logger: .none);
         let draw007: [UByte] = [
             0x00, 0xE0, // Clear the screen
             0x60, 0x00, // Set V0 to 0 (starting x position for 0)
@@ -55,7 +55,7 @@ final class Chip8EmulationCoreTests: XCTestCase {
     }
     
     func testErrorHandling() async throws {
-        let core = Chip8EmulationCore(logger: EmulationConsoleLogger(includedLevels: [.warning, .error]));
+        let core = Chip8EmulationCore(logger: .none);
         var unsupported: [UByte] = [
             0x00, 0x00 // Unsupported operation
         ]

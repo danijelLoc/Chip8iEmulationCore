@@ -40,13 +40,22 @@ Task {
 ```
 
 ### Handling Key Events
+Chip8 has 16 system keys, from 0 to F. 
+```swift
+    1 2 3 C
+    4 5 6 D
+    7 8 9 E
+    A 0 B F
+```
 To handle key press and release events:
 ```swift
-  emulationCore.onKeyDown(key: "w")  // Example: Press down keyboard key 'w'
-  emulationCore.onKeyUp(key: "5")    // Example: Release keyboard key '5'
-  emulationCore.onKeyDown(key: "p")  // Example: Press down keyboard key 'p' which is as default mapped to emulation pause function
+emulationCore.onKeyDown(key: .Zero)  // Example: Press down Chip8 key '0'
+emulationCore.onKeyDown(key: .One)  // Example: Press down Chip8 key '1'
+emulationCore.onKeyUp(key: .F)  // Example: Release Chip8 key 'F'
 ```
-Use the onKeyDown and onKeyUp methods to send input to the emulator. Keys are mapped based on the `Chip8InputBindings` and `EmulationMenuBindings` dictionaries that can be modified for custom bindings.
+Use the `onKeyDown` and `onKeyUp` methods to send input key `enum` to the emulator. For more details and example of keyboard bindings see `EmulationControls` module. 
+
+> Note: Keyboard/controller/touchscreen-buttons can be custom mapped to Chip8 keys and this should be done in fronted app, emulation core only accepts `EmulationControls.Chip8Key` enum.
 
 ### Observing Output
 The `outputScreen` and `outputSoundTimer` properties are marked with `@Published`, so you can subscribe to them and update the view and play the sound in `SwiftUI`, `UIKit`, or `AppKit`. 
