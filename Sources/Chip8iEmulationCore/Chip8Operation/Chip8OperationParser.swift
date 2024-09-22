@@ -77,9 +77,9 @@ internal struct Chip8OperationParser: Chip8OperationParserProtocol {
             return .RegistersOperation(registerXIndex: registerXIndex, registerYIndex: registerYIndex, operation: .bitwiseXOR)
         case let code where (code & 0xF00F) == 0x8004: // 8XY4 - Set VX into VX + VY
             return .RegistersOperation(registerXIndex: registerXIndex, registerYIndex: registerYIndex, operation: .addition)
-        case let code where (code & 0xF00F) == 0x8005: // 8XY4 - Set VX into VX - VY
+        case let code where (code & 0xF00F) == 0x8005: // 8XY5 - Set VX into VX - VY
             return .RegistersOperation(registerXIndex: registerXIndex, registerYIndex: registerYIndex, operation: .subtractSecondFromFirst)
-        case let code where (code & 0xF00F) == 0x8007: // 8XY4 - Set VX into VY - VX
+        case let code where (code & 0xF00F) == 0x8007: // 8XY7 - Set VX into VY - VX
             return .RegistersOperation(registerXIndex: registerXIndex, registerYIndex: registerYIndex, operation: .subtractFirstFromSecond)
         case let code where (code & 0xF00F) == 0x8006: // 8XY6 - Set VX into VX >> 1
             return .RegistersOperation(registerXIndex: registerXIndex, registerYIndex: registerYIndex, operation: .shiftRight)

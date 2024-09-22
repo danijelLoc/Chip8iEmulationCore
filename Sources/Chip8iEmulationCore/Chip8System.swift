@@ -219,11 +219,7 @@ internal class Chip8System {
             state.pc += 2
             break
         case .Unknown(let operationCode):
-            logger?.log("Skipping unknown operation code: \(operationCode.fullDescription)", level: .warning)
-            state.pc += 2
-            break
-        default:
-            logger?.log("Skipping not implemented operation: \(operation)", level: .warning)
+            logger?.log("Skipping unknown operation with code: \(operationCode.fullDescription)", level: .warning)
             state.pc += 2
             break
         }
@@ -236,6 +232,10 @@ internal class Chip8System {
         return opCode
     }
     
+    internal func loadState(_ newState: Chip8SystemState) {
+        state = newState
+    }
+    
     internal func decreaseDelayTimer() {
         if state.delayTimer == 0 { return }
         state.delayTimer -= 1
@@ -246,11 +246,11 @@ internal class Chip8System {
         state.soundTimer -= 1
     }
     
-    internal func KeyDown(key: UByte) {
+    internal func keyDown(key: UByte) {
         state.InputKeys[key.toInt] = true
     }
     
-    internal func KeyUp(key: UByte) {
+    internal func keyUp(key: UByte) {
         state.InputKeys[key.toInt] = false
     }
 }
