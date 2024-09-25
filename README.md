@@ -1,3 +1,6 @@
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FdanijelLoc%2FChip8iEmulationCore%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/danijelLoc/Chip8iEmulationCore)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FdanijelLoc%2FChip8iEmulationCore%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/danijelLoc/Chip8iEmulationCore)
+
 # Chip8iEmulationCore
 
 `Chip8iEmulationCore` is a Swift package for emulating the Chip8 system and running its programs. This package provides an emulation core that allows you to start emulation, process Chip8 program operations, handle input, and subscribe to Chip8 screen output and sound updates. 
