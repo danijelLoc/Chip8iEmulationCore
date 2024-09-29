@@ -11,11 +11,26 @@ import Foundation
 /// Internal Chip8 System CPU module that executes system operation with resulting mutation of system state.
 internal class Chip8System {
 
-    private(set) var state: Chip8SystemState
+    private var _state: Chip8SystemState
+    private let stateLock = NSLock()  // Lock to synchronise access
     private var logger: EmulationLoggerProtocol?
     
+    // Thread-safe getter and setter for the state property
+    private(set) var state: Chip8SystemState {
+        get {
+            stateLock.lock()
+            defer { stateLock.unlock() }
+            return _state
+        }
+        set {
+            stateLock.lock()
+            defer { stateLock.unlock() }
+            _state = newValue
+        }
+    }
+    
     internal init(font: [UByte] = Chip8SystemState.DefaultFontSet, logger: EmulationLoggerProtocol? = .none) {
-        state = Chip8SystemState()
+        _state = Chip8SystemState()
         self.logger = logger
         // Load font set
         state.randomAccessMemory.replaceSubrange(state.fontStartingLocation.toInt..<(state.fontStartingLocation.toInt+80), with: font)
