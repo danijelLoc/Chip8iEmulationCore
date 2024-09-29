@@ -2,9 +2,9 @@ import XCTest
 import Combine
 @testable import Chip8iEmulationCore
 
-final class Chip8EmulationCoreTests: XCTestCase {
+final class Chip8EmuCoreTests: XCTestCase {
     
-    func testEmulationAndErrorHandling() async throws {
+    func testEmulationAndOutputPublishing() async throws {
         let core = Chip8EmulationCore(logger: .none);
         let draw007: [UByte] = [
             0x00, 0xE0, // Clear the screen
@@ -78,5 +78,49 @@ final class Chip8EmulationCoreTests: XCTestCase {
         XCTAssertEqual(EmulationError.opcodeFetchError(address: 0xFFF), core.debugErrorInfo as! EmulationError) // Error has halted program execution and debug info was sent to observers
     }
     
+    func testInput() async throws {
+        let core = Chip8EmulationCore(logger: .none);
+        let waitForKey: [UByte] = [
+            0x00, 0xE0, // Clear the screen
+            0x60, 0x00, // Set V0 to 0 (starting x position for 0)
+            0x61, 0x00, // Set V1 to 0 (starting y position for 0)
+            0x62, 0x00, // Set V2 to 0 (character in mind)
+
+            0xF2, 0x29, // Load the address of the font char in V2 into I
+            0xD0, 0x15, // Draw digit 0 at (V0, V1) with no collision
+
+            0x63, 0x01, // Set V3 to 1 (button at index 1)
+            0xE3, 0x9E, // Skip next command if button 1 is pressed
+            0x12, 0x00, // Jump to beginning
+            0x00, 0x00  // Invalid operation
+        ]
+        
+        let program = Chip8Program(name: "Key", contentROM: waitForKey)
+        
+        var cb = Set<AnyCancellable>()
+        
+        core.$outputScreen.sink { value in
+            // print(EmulationConsoleLogger.getStringOutput(value, width: 64, height: 32))
+        }.store(in: &cb)
+        
+        let emuTask = Task {
+            await core.emulate(program: program)
+        }
+        
+        try await Task.sleep(nanoseconds: 1_000_000_000) // Sleep for 1 second
+        XCTAssertEqual(false, emuTask.isCancelled)
+        
+        
+        Task { // Simulate calling from the main thread of the frontend app
+            core.onKeyDown(key: .One)
+        }
+        
+        let res = await emuTask.result
+        XCTAssertNoThrow(try res.get()) // Finished and did not throw the error outside (invalid operation caught in the core)
+//        core.onKeyDown(key: .A)
+//        core.onKeyDown(key: .A)
+//        core.onKeyUp(key: .A)
+        
+    }
     
 }
