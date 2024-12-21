@@ -38,7 +38,7 @@ final class Chip8SystemTests: XCTestCase {
         XCTAssertEqual(UShort(0x00E0), opCodeToBeExecuted) // Chip8 uses big endian
         
         // Execute the operation
-        try system.executeOperation(operation: parser.decode(operationCode: opCodeToBeExecuted))
+        try system.executeOperation(operation: parser.decode(opCodeToBeExecuted))
         
         // PC should change
         XCTAssertEqual(0x202, system.state.pc)
@@ -97,7 +97,7 @@ final class Chip8SystemTests: XCTestCase {
         XCTAssertEqual(UShort(0x00E0), opCodeToBeExecuted) // Chip8 uses big endian
         
         // Execute the operation
-        try system.executeOperation(operation: parser.decode(operationCode: opCodeToBeExecuted))
+        try system.executeOperation(operation: parser.decode(opCodeToBeExecuted))
         
         // PC of system should change
         XCTAssertEqual(0x202, system.state.pc)

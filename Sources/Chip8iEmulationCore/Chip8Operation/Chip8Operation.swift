@@ -7,6 +7,7 @@
 
 import Foundation
 
+/// Represents single Chip8 operation decoded from single machine operation code (UShort).
 public enum Chip8Operation: Equatable {
     
     /// Unknown operation whose code could not have been parsed

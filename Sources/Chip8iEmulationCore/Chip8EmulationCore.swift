@@ -63,13 +63,17 @@ public class Chip8EmulationCore: ObservableObject, Chip8EmulationCoreProtocol {
     private var logger: EmulationLoggerProtocol?
     
     /// Number of instructions done in a second. Usually shown in Hz. Default for most programs is 700 Hz
-    private var systemClockCount = 600
+    private var systemClockFrequency: Int = 600
     /// Number of frames (frame rate) drawn per second. Standard for Chip8 is 60 Hz.
-    private var targetSystemFrameCount = 60
-    private var systemClockCountPerFrame: Int  { systemClockCount / targetSystemFrameCount }
+    private var systemFrameCount = 60
+    private var systemClockInstructionsCountPerFrame: Int  { systemClockFrequency / systemFrameCount }
+    
+    /// Delay and Sound timers decrement rate. Standard for Chip8 is 60 Hz.
+    private var systemTimersFrequency = 60
     
     private var isPaused = false
     private var emulationTask: Task<Void, Error>?
+    private var timersDecrementTask: Task<Void, Error>?
     
     /// Output screen buffer 64 width x 32 height. Pixel can be 0 or 1. True is turned On and False is turned Off.
     /// One example of how to subscribe to this data is to create CGImage from it using fromMonochromeBitmap extension method and then show it in Image element.
@@ -89,23 +93,27 @@ public class Chip8EmulationCore: ObservableObject, Chip8EmulationCoreProtocol {
     public var debugSystemStateInfoPublisher: Published<Chip8SystemState?>.Publisher { $debugSystemStateInfo }
     public var debugErrorInfoPublisher: Published<Error?>.Publisher { $debugErrorInfo }
     
-    public init(logger: EmulationLoggerProtocol? = EmulationConsoleLogger()) {
+    public init(parser: Chip8OperationParserProtocol = Chip8OperationParser(), logger: EmulationLoggerProtocol? = EmulationConsoleLogger()) {
         self.logger = logger
-        self.system = Chip8System(logger: logger)
-        self.opCodeParser = Chip8OperationParser()
+        self.opCodeParser = parser
+        self.system = Chip8System(parser: parser, logger: logger)
+
     }
     
     public func emulate(program: Chip8Program) async {
         do {
             await resetPublishers()
-            self.system = Chip8System(logger: logger) // Reset the system
+            self.system = Chip8System(parser: opCodeParser, logger: logger) // Reset the system
             self.program = program
             self.isPaused = false
             
             system.loadProgram(program.contentROM)
             emulationTask = Task { try await emulationLoop(program: program) }
+            timersDecrementTask = Task { try await timersDecrementLoop() }
             
             try await emulationTask?.value
+            try await timersDecrementTask?.value
+
         } catch let error {
             logger?.log("Stopping the emulation because error was thrown: \(error). Debug information sent to publishers.", level: .error)
             await publishInfo(error: error)
@@ -114,48 +122,37 @@ public class Chip8EmulationCore: ObservableObject, Chip8EmulationCoreProtocol {
     }
     
     private func emulationLoop(program: Chip8Program) async throws {
-        while(true) {
-            try Task.checkCancellation()
+        while !Task.isCancelled {
             if isPaused { continue }
             
             let timeStart = Date()
-            for _ in 0..<systemClockCountPerFrame {
-                try await emulateSingleCycle()
+            for _ in 0..<systemClockInstructionsCountPerFrame {
+                try system.emulateSingleCycle()
             }
+            
             let timeEnd = Date()
-            
             let performedInstructionsInterval: Double = timeEnd.timeIntervalSince(timeStart).magnitude
-            let targetFrameTime: Double = 1.0 / Double(targetSystemFrameCount)
+            let targetFrameTime: Double = 1.0 / Double(systemFrameCount)
             
-            /// To ensure constant target frame rate / frame time. we have to introduce sleep interval.
-            let sleepPeriodForTargetFrameTime = targetFrameTime > performedInstructionsInterval ? targetFrameTime - performedInstructionsInterval : 0
-            try? await Task.sleep(nanoseconds: UInt64(sleepPeriodForTargetFrameTime * 1_000_000_000))
-            
-            // TODO: what if it's different frequency for frame-rate and timers? timers in its own task...
-            // Update timers
-            system.decreaseDelayTimer()
-            system.decreaseSoundTimer()
+            /// To ensure constant target frame time. we have to introduce sleep interval.
+            let sleepPeriod = targetFrameTime > performedInstructionsInterval ? targetFrameTime - performedInstructionsInterval : 0
+            try? await Task.sleep(nanoseconds: UInt64(sleepPeriod * 1_000_000_000))
             
             await publishInfo()
         }
     }
     
-    /// Executes single parsed operation of opcode at memory location saved in PC
-    private func emulateSingleCycle() async throws {
-        // Fetch Opcode
-        let opCode: UShort = try system.fetchOperationCode(memoryLocation: system.state.pc)
-        // Decode Opcode
-        let operation = opCodeParser.decode(operationCode: opCode)
-        logger?.log("Parsed \(opCode.hexDescription) -> \(operation)", level: .info)
-        
-        // Execute Operation
-        try system.executeOperation(operation: operation)
-        
-        // Send debug info
-        await MainActor.run {
-
+    private func timersDecrementLoop() async throws {
+        while !Task.isCancelled {
+            if isPaused { continue }
+            // Decrement timers
+            system.decreaseDelayTimer()
+            system.decreaseSoundTimer()
+            let interval = 1.0 / Double(systemTimersFrequency)
+            try await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
         }
     }
+    
     
     public func onKeyDown(key: EmulationControls.Chip8Key) {
         system.keyDown(key: key.rawValue)
@@ -177,6 +174,7 @@ public class Chip8EmulationCore: ObservableObject, Chip8EmulationCoreProtocol {
     
     public func stop() {
         emulationTask?.cancel()
+        timersDecrementTask?.cancel()
     }
 
     public func exportState() -> EmulationState? {

@@ -1,5 +1,5 @@
 //
-//  Chip8ProgramROM.swift
+//  Chip8Program.swift
 //
 //
 //  Created by Danijel Stracenski on 14.09.2024..
@@ -9,6 +9,7 @@ import Foundation
 import CryptoKit
 
 /// Represents compiled program for Chip8 system, for example game "Pong". Compiled program binary data can be loaded from .ch8 files for example.
+/// Compiled program binary data aka machine code includes operation codes and sprites.
 public struct Chip8Program {
     /// Name of the program, used for list of programs in emulator frontend for example
     public let name: String

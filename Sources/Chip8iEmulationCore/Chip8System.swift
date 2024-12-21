@@ -11,10 +11,11 @@ import Foundation
 /// Internal Chip8 System CPU module that executes system operation with resulting mutation of system state.
 internal class Chip8System {
 
-    private var _state: Chip8SystemState
-    private let stateLock = NSLock()  // Lock to synchronise access
+    private var parser: Chip8OperationParserProtocol
     private var logger: EmulationLoggerProtocol?
     
+    private var _state: Chip8SystemState
+    private let stateLock = NSLock()  // Lock to synchronise access
     // Thread-safe getter and setter for the state property
     private(set) var state: Chip8SystemState {
         get {
@@ -29,9 +30,10 @@ internal class Chip8System {
         }
     }
     
-    internal init(font: [UByte] = Chip8SystemState.DefaultFontSet, logger: EmulationLoggerProtocol? = .none) {
-        _state = Chip8SystemState()
+    internal init(parser: Chip8OperationParserProtocol = Chip8OperationParser(), font: [UByte] = Chip8SystemState.DefaultFontSet, logger: EmulationLoggerProtocol? = .none) {
+        self._state = Chip8SystemState()
         self.logger = logger
+        self.parser = parser
         // Load font set
         state.randomAccessMemory.replaceSubrange(state.fontStartingLocation.toInt..<(state.fontStartingLocation.toInt+80), with: font)
     }
@@ -39,6 +41,18 @@ internal class Chip8System {
     /// Load program rom into system ram at location 0x200 (512) where pc starts at default.
     internal func loadProgram(_ programROM: [UByte]) {
         state.randomAccessMemory.replaceSubrange(512..<(512+programROM.count), with: programROM)
+    }
+    
+    /// Executes single parsed operation of opcode at memory location saved in PC
+    internal func emulateSingleCycle() throws {
+        // Fetch Opcode
+        let opCode: UShort = try fetchOperationCode(memoryLocation: state.pc)
+        // Decode Opcode
+        let operation = parser.decode(opCode)
+        logger?.log("Parsed \(opCode.hexDescription) -> \(operation)", level: .info)
+        
+        // Execute Operation
+        try executeOperation(operation: operation)
     }
     
     /// Execute single given operation. It takes needed data from systemState and modifies it

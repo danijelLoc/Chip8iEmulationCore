@@ -161,3 +161,14 @@ extension Array<Bool> {
         return output
     }
 }
+
+extension Array<UShort> {
+    /// Maps array of shorts into array of bytes. Can use big endian or little endian.
+    public func toBytes(isBigEndian: Bool = true) -> [UByte] {
+        if isBigEndian {
+            return self.flatMap { value in [UByte(value >> 8), UByte(value & 0xFF)] }
+        } else {
+            return self.flatMap { value in [UByte(value & 0xFF), UByte(value >> 8)] }
+        }
+    }
+}

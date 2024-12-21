@@ -43,13 +43,6 @@ public class EmulationConsoleLogger: EmulationLoggerProtocol {
     }
 }
 
-/// Errors that terminate the emulation
-public enum EmulationError: Error, Equatable {
-    case unknownOpcode(opcode: UShort)
-    /// If address is not lower than 0xFFF or 4095 (operation code is 2 bytes so the second one will be out of bounds...)
-    case opcodeFetchError(address: UShort)
-}
-
 /// Enum to define different emulation logging levels.
 public enum EmulationLogLevel: String {
     case info = "INFO"

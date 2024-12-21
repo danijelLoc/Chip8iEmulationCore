@@ -7,13 +7,17 @@
 
 import Foundation
 
-internal protocol Chip8OperationParserProtocol {
-    /// Decode operation code (UShort) into Chip8Operation with its parameters.
-    func decode(operationCode: UShort) -> Chip8Operation;
+public protocol Chip8OperationParserProtocol {
+    /// Decode machine operation code (UShort) into Chip8Operation with its parameters.
+    func decode(_ operationCode: UShort) -> Chip8Operation;
+    /// Encode back Chip8Operation enum into machine operation code (UShort)
+    func encode(_ operation: Chip8Operation) -> UShort;
 }
 
-internal struct Chip8OperationParser: Chip8OperationParserProtocol {
-    public func decode(operationCode: UShort) -> Chip8Operation {
+public struct Chip8OperationParser: Chip8OperationParserProtocol {
+    public init () {}
+    
+    public func decode(_ operationCode: UShort) -> Chip8Operation {
         // Extract common indices
         let registerXIndex = Int((operationCode & 0x0F00) >> 8)
         let registerYIndex = Int((operationCode & 0x00F0) >> 4)
@@ -99,9 +103,9 @@ internal struct Chip8OperationParser: Chip8OperationParserProtocol {
             return .RegistersStorage(maxIncludedRegisterIndex: registerXIndex, isRestoring: false)
         case let code where (code & 0xF0FF) == 0xF065: // FX65 - Restore registers up to index X from memory addresses starting from the one stored in I
             return .RegistersStorage(maxIncludedRegisterIndex: registerXIndex, isRestoring: true)
-            
         case let code where (code & 0xF0FF) == 0xF033: // FX33 - Store decimal digits of VX value in memory addresses starting from the one stored in I
             return .RegisterStoreDecimalDigits(registerXIndex: registerXIndex)
+            
         case let code where (code & 0xF0FF) == 0xF007: // FX07 sets VX to the current value of the delay timer
             return .DelayTimerStore(registerIndex: registerXIndex)
         case let code where (code & 0xF0FF) == 0xF015: // FX15 sets the delay timer to the value in VX
@@ -111,6 +115,93 @@ internal struct Chip8OperationParser: Chip8OperationParserProtocol {
             
         default:
             return .Unknown(operationCode: operationCode)
+        }
+    }
+    
+    public func encode(_ operation: Chip8Operation) -> UShort {
+        switch operation {
+        case .ClearScreen:
+            return 0x00E0
+            
+        case .JumpToAddress(let address):
+            return 0x1000 | (address & 0x0FFF)
+        case .JumpToAddressPlusV0(let address):
+            return 0xB000 | (address & 0x0FFF)
+            
+        case .CallSubroutine(let address):
+            return 0x2000 | (address & 0x0FFF)
+        case .ReturnFromSubroutine:
+            return 0x00EE
+            
+        case .ConditionalSkipRegisterValue(let registerIndex, let value, let isEqual):
+            let base: UShort = isEqual ? 0x3000 : 0x4000
+            return base | (UShort(registerIndex) << 8) | UShort(value)
+        case .ConditionalSkipRegisters(let registerXIndex, let registerYIndex, let isEqual):
+            let base: UShort = isEqual ? 0x5000 : 0x9000
+            return base | (UShort(registerXIndex) << 8) | (UShort(registerYIndex) << 4)
+            
+        case .ConditionalSkipKeyDown(let registerIndex, let isKeyDown):
+            let base: UShort = isKeyDown ? 0xE09E : 0xE0A1
+            return base | (UShort(registerIndex) << 8)
+        case .ConditionalPauseUntilKeyTap(let registerIndex):
+            return 0xF00A | (UShort(registerIndex) << 8)
+            
+        case .SetValueToRegister(let registerIndex, let value):
+            return 0x6000 | (UShort(registerIndex) << 8) | UShort(value)
+        case .AddValueToRegister(let registerIndex, let value):
+            return 0x7000 | (UShort(registerIndex) << 8) | UShort(value)
+        case .SetValueToIndexRegister(let value):
+            return 0xA000 | (value & 0x0FFF)
+        case .SetValueToRegisterWithRandomness(let registerIndex, let value):
+            return 0xC000 | (UShort(registerIndex) << 8) | UShort(value)
+            
+        case .RegistersOperation(let registerXIndex, let registerYIndex, let operation):
+            let opCode: UShort
+            switch operation {
+            case .setToSecond:
+                opCode = 0x0
+            case .bitwiseOr:
+                opCode = 0x1
+            case .bitwiseAnd:
+                opCode = 0x2
+            case .bitwiseXOR:
+                opCode = 0x3
+            case .addition:
+                opCode = 0x4
+            case .subtractSecondFromFirst:
+                opCode = 0x5
+            case .subtractFirstFromSecond:
+                opCode = 0x7
+            case .shiftRight:
+                opCode = 0x6
+            case .shiftLeft:
+                opCode = 0xE
+            }
+            return 0x8000 | (UShort(registerXIndex) << 8) | (UShort(registerYIndex) << 4) | opCode
+            
+        case .DrawSprite(let height, let registerXIndex, let registerYIndex):
+            return 0xD000 | (UShort(registerXIndex) << 8) | (UShort(registerYIndex) << 4) | UShort(height)
+            
+        case .AddRegisterValueToIndexRegister(let registerIndex):
+            return 0xF01E | (UShort(registerIndex) << 8)
+        case .SetFontCharacterAddressToIndexRegister(let registerIndex):
+            return 0xF029 | (UShort(registerIndex) << 8)
+            
+        case .RegistersStorage(let maxIncludedRegisterIndex, let isRestoring):
+            let base: UShort = isRestoring ? 0xF065 : 0xF055
+            return base | (UShort(maxIncludedRegisterIndex) << 8)
+        case .RegisterStoreDecimalDigits(let registerXIndex):
+            return 0xF033 | (UShort(registerXIndex) << 8)
+            
+        case .DelayTimerStore(let registerIndex):
+            return 0xF007 | (UShort(registerIndex) << 8)
+        case .DelayTimerSet(let registerIndex):
+            return 0xF015 | (UShort(registerIndex) << 8)
+        case .SoundTimerSet(let registerIndex):
+            return 0xF018 | (UShort(registerIndex) << 8)
+            
+        case .Unknown(let operationCode):
+            return operationCode
         }
     }
 }
