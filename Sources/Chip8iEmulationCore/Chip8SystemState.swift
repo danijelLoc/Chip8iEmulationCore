@@ -25,7 +25,7 @@ public struct Chip8SystemState: Codable {
     
     /// if set above 0 timer is counting down. Counting at 60Hz
     public var delayTimer: UByte
-    /// if set above 0 system is beeping and timer is counting down. Counting at 60Hz.
+    /// if set above 0 system is beeping continuously and timer is counting down. Counting at 60Hz.
     public var soundTimer: UByte
     
     /// One dimension Byte array representing output screen (64 width x 32 height). One bit represents one pixel, order from left top of the screen. Rows saved in on dimensional array one after another.
@@ -38,6 +38,9 @@ public struct Chip8SystemState: Codable {
     
     /// Address of the start of memory where system font is saved. Font is made of 16 character and each takes 5 bytes so 80 bytes from starting address is taken by font data.
     public var fontStartingLocation: UShort
+    
+    /// Helper set to keep track of used keys by the program since Chip8 controls labelling is not intuitive and there is no standard for directional keys between different games.
+    public var UsedKeysHelper: Set<UByte> = []
     
     public init() {
         self.randomAccessMemory = Array(repeating: 0, count: 4096)

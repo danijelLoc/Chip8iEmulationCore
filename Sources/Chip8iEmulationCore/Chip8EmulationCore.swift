@@ -16,7 +16,8 @@ public protocol Chip8EmulationCoreProtocol {
     var outputScreenPublisher: Published<[Bool]>.Publisher { get }
 
     /// Indicates if emulator should play the sound. Returns (playSound, SoundTimerValue). If timer is greater than 0 playSound will be true.
-    /// Important: On every change of timer value that is greater than 0 you should play short sound (tick).
+    /// Important: On every change of timer if value is above 0 then beep should be played. Continuous sound should be played between the frames if value is still above 0, so looped continuous sound wave).
+    /// When value  is 0 any playing sound should be stoped.
     var outputSoundTimerPublisher: Published<UByte>.Publisher { get }
     
     /// A publisher that emits changes to the debugSystemStateInfo value.
@@ -25,15 +26,18 @@ public protocol Chip8EmulationCoreProtocol {
     /// Debug Info about encountered error
     var debugErrorInfoPublisher: Published<Error?>.Publisher { get }
     
+    /// Info about play status
+    var isPlayingStatusInfoPublisher: Published<Bool>.Publisher { get }
+    
     
     /// Starts emulation of the Chip8 program. Programs for Chip8 are executed indefinitely (infinite loop).
     ///
     /// Logger is by default EmulationConsoleLogger, to disable logging set it to nil, or replace it with your own implementation, for example logging into file.
-    func emulate(program: Chip8Program) async
+    func emulate(_ program: Chip8Program) async
     
     
     /// Pause and resume the emulation of the Chip8 program
-    func togglePause()
+    func togglePause() async
     
     /// Stops running emulation of the Chip8 program
     func stop()
@@ -45,10 +49,10 @@ public protocol Chip8EmulationCoreProtocol {
     func exportState() -> EmulationState?
     
     /// Chip8 Gameplay key pressed down. See Chip8Key enum for more information.
-    func onKeyDown(key: EmulationControls.Chip8Key)
+    func onKeyDown(_ key: EmulationControls.Chip8Key)
     
     /// Chip8 Gameplay key released. See Chip8Key enum for more information.
-    func onKeyUp(key: EmulationControls.Chip8Key)
+    func onKeyUp(_ key: EmulationControls.Chip8Key)
 }
 
 /// Emulation Core that should be used for starting emulation, sending inputs and subscribing to its screen and sound output. It also includes optional debug output info for advanced users. This is a ViewModel that creates execution loop and communicates with internal Chip8 program operations processing modules.
@@ -69,7 +73,7 @@ public class Chip8EmulationCore: ObservableObject, Chip8EmulationCoreProtocol {
     private var targetFrameTime: Double { 1.0 / Double(systemScreenAndTimersFrequency) }
     private var systemCpuInstructionsCountPerFrame: Int  { systemCpuFrequency / systemScreenAndTimersFrequency }
     
-    private var isPaused = false
+    private var isPlaying = false
     private var emulationTask: Task<Void, Error>?
     
     /// Output screen buffer 64 width x 32 height. Pixel can be 0 or 1. True is turned On and False is turned Off.
@@ -84,11 +88,15 @@ public class Chip8EmulationCore: ObservableObject, Chip8EmulationCoreProtocol {
     /// Debug Info about encountered error
     @Published public private(set) var debugErrorInfo: Error?
     
+    /// Info about play status
+    @Published public private(set) var isPlayingInfo: Bool = true
+    
     // Publishers
     public var outputScreenPublisher: Published<[Bool]>.Publisher { $outputScreen }
     public var outputSoundTimerPublisher: Published<UByte>.Publisher { $outputSoundTimer}
     public var debugSystemStateInfoPublisher: Published<Chip8SystemState?>.Publisher { $debugSystemStateInfo }
     public var debugErrorInfoPublisher: Published<Error?>.Publisher { $debugErrorInfo }
+    public var isPlayingStatusInfoPublisher: Published<Bool>.Publisher { $isPlayingInfo }
     
     public init(parser: Chip8OperationParserProtocol = Chip8OperationParser(), logger: EmulationLoggerProtocol? = EmulationConsoleLogger()) {
         self.logger = logger
@@ -97,12 +105,12 @@ public class Chip8EmulationCore: ObservableObject, Chip8EmulationCoreProtocol {
 
     }
     
-    public func emulate(program: Chip8Program) async {
+    public func emulate(_ program: Chip8Program) async {
         do {
             await resetPublishers()
             self.system = Chip8System(parser: opCodeParser, logger: logger) // Reset the system
             self.program = program
-            self.isPaused = false
+            self.isPlaying = true
             
             system.loadProgram(program.contentROM)
             
@@ -122,7 +130,7 @@ public class Chip8EmulationCore: ObservableObject, Chip8EmulationCoreProtocol {
         await publishSoundAndScreenOutput()
         
         while !Task.isCancelled {
-            if isPaused { continue }
+            if !isPlaying { continue }
             
             let timeStart = Date()
             for _ in 0..<systemCpuInstructionsCountPerFrame {
@@ -146,16 +154,17 @@ public class Chip8EmulationCore: ObservableObject, Chip8EmulationCoreProtocol {
     }
     
     
-    public func onKeyDown(key: EmulationControls.Chip8Key) {
+    public func onKeyDown(_ key: EmulationControls.Chip8Key) {
         system.keyDown(key: key.rawValue)
     }
 
-    public func onKeyUp(key: EmulationControls.Chip8Key) {
+    public func onKeyUp(_ key: EmulationControls.Chip8Key) {
         system.keyUp(key: key.rawValue)
     }
     
-    public func togglePause() {
-        isPaused = !isPaused
+    public func togglePause() async {
+        isPlaying = !isPlaying
+        await publishDebugInfo()
     }
     
     public func loadState(_ newState: EmulationState) {
@@ -175,6 +184,7 @@ public class Chip8EmulationCore: ObservableObject, Chip8EmulationCoreProtocol {
     
     private func publishDebugInfo(error: Error? = nil) async {
         await MainActor.run {
+            isPlayingInfo = isPlaying
             debugSystemStateInfo = system.state
             debugErrorInfo = error
         }

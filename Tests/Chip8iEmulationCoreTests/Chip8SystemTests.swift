@@ -50,14 +50,14 @@ final class Chip8SystemTests: XCTestCase {
         let system = Chip8System()
         
         // Set value 2 into V0, other registers are set to zero
-        try system.executeOperation(operation: .SetValueToRegister(registerIndex: 0, value: 2))
+        try system.executeOperation(operation: SetValueToRegister(registerIndex: 0, value: 2))
         
         // Set address of font character at the index 2 into I. In default font this is the digit 2 character itself.
-        try system.executeOperation(operation: .SetFontCharacterAddressToIndexRegister(registerIndex: 0))
+        try system.executeOperation(operation: SetFontCharacterAddressToIndexRegister(registerIndex: 0))
         
         
         // Draw the digit 2 character at the location x=0, y=0 (registers 3 and 4 have initial zero value inside them)
-        try system.executeOperation(operation: .DrawSprite(height: 0x5, registerXIndex: 3, registerYIndex: 4))
+        try system.executeOperation(operation: DrawSprite(height: 0x5, registerXIndex: 3, registerYIndex: 4))
         //print(EmulationConsoleLogger.getStringOutput(system.state.Output, width: 64, height: 32))
         
         // Cut out selected screen area x0y0 x8y5
@@ -74,7 +74,7 @@ final class Chip8SystemTests: XCTestCase {
         
         // Test collision
         // Draw the digit 2 on the same place as before -> Collision
-        try system.executeOperation(operation: .DrawSprite(height: 0x5, registerXIndex: 3, registerYIndex: 4))
+        try system.executeOperation(operation: DrawSprite(height: 0x5, registerXIndex: 3, registerYIndex: 4))
         
         selectedArea = system.state.Output.getSelectedArea(locationX: 0, locationY: 0, selectedWidth: 8, selectedHeight: 5, totalWidth: 64, totalHeight: 32)
         selectedAreaData = selectedArea?.toRowsBytes(totalWidth: 8, totalHeight: 5)

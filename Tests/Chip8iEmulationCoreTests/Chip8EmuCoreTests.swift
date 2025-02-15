@@ -38,7 +38,7 @@ final class Chip8EmuCoreTests: XCTestCase {
             // print(EmulationConsoleLogger.getStringOutput(value, width: 64, height: 32))
         }.store(in: &cb)
         
-        await core.emulate(program: program)
+        await core.emulate(program)
         
         // Cut out selected screen area x10y0 x18y5 where number 7 should have been drawn
         let selectedArea = core.outputScreen.getSelectedArea(locationX: 10, locationY: 0, selectedWidth: 8, selectedHeight: 5, totalWidth: 64, totalHeight: 32)
@@ -61,7 +61,7 @@ final class Chip8EmuCoreTests: XCTestCase {
         ]
         
         var program = Chip8Program(name: "unsupported", contentROM: unsupported)
-        await core.emulate(program: program)
+        await core.emulate(program)
         
         XCTAssertEqual(EmulationError.unknownOpcode(opcode: 0x0), core.debugErrorInfo as! EmulationError) // Error has halted program execution and debug info was sent to observers
         XCTAssertEqual(0x200, core.debugSystemStateInfo?.pc) // Execution was halted immediately because of unknown operation code at 0x200 so PC is not changed
@@ -72,7 +72,7 @@ final class Chip8EmuCoreTests: XCTestCase {
         ]
         
         program = Chip8Program(name: "unsupported", contentROM: unsupported)
-        await core.emulate(program: program)
+        await core.emulate(program)
         
         XCTAssertEqual(0xFFF, core.debugSystemStateInfo?.pc) // Jump was made and system could not get second part of new opcode
         XCTAssertEqual(EmulationError.opcodeFetchError(address: 0xFFF), core.debugErrorInfo as! EmulationError) // Error has halted program execution and debug info was sent to observers
@@ -104,7 +104,7 @@ final class Chip8EmuCoreTests: XCTestCase {
         }.store(in: &cb)
         
         let emuTask = Task {
-            await core.emulate(program: program)
+            await core.emulate(program)
         }
         
         try await Task.sleep(nanoseconds: 1_000_000_000) // Sleep for 1 second
@@ -112,11 +112,11 @@ final class Chip8EmuCoreTests: XCTestCase {
         
         
         Task { // Simulate calling from the main thread of the frontend app
-            core.onKeyDown(key: .One)
+            core.onKeyDown(.One)
         }
         
         let res = await emuTask.result
-        XCTAssertNoThrow(try res.get()) // Finished and did not throw the error outside (invalid operation caught in the core)
+        XCTAssertNoThrow(res.get()) // Finished and did not throw the error outside (invalid operation caught in the core)
 //        core.onKeyDown(key: .A)
 //        core.onKeyDown(key: .A)
 //        core.onKeyUp(key: .A)
