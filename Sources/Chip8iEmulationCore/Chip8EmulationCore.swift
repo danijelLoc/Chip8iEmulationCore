@@ -27,12 +27,10 @@ public protocol Chip8EmulationCoreProtocol {
     var debugErrorInfoPublisher: Published<Error?>.Publisher { get }
     
     /// Info about play status
-    var isPlayingStatusInfoPublisher: Published<Bool>.Publisher { get }
+    var playingInfoPublisher: Published<PlayingInfo>.Publisher { get }
     
     
     /// Starts emulation of the Chip8 program. Programs for Chip8 are executed indefinitely (infinite loop).
-    ///
-    /// Logger is by default EmulationConsoleLogger, to disable logging set it to nil, or replace it with your own implementation, for example logging into file.
     func emulate(_ program: Chip8Program) async
     
     
@@ -40,7 +38,7 @@ public protocol Chip8EmulationCoreProtocol {
     func togglePause() async
     
     /// Stops running emulation of the Chip8 program
-    func stop()
+    func stop() async
     
     /// Loads emulation state if it belongs to the current loaded program
     func loadState(_ newState: EmulationState)
@@ -72,8 +70,10 @@ public class Chip8EmulationCore: ObservableObject, Chip8EmulationCoreProtocol {
     private var systemScreenAndTimersFrequency = 60
     private var targetFrameTime: Double { 1.0 / Double(systemScreenAndTimersFrequency) }
     private var systemCpuInstructionsCountPerFrame: Int  { systemCpuFrequency / systemScreenAndTimersFrequency }
-    
+
+    private var hasEmulationStarted = false
     private var isPlaying = false
+    
     private var emulationTask: Task<Void, Error>?
     
     /// Output screen buffer 64 width x 32 height. Pixel can be 0 or 1. True is turned On and False is turned Off.
@@ -89,15 +89,16 @@ public class Chip8EmulationCore: ObservableObject, Chip8EmulationCoreProtocol {
     @Published public private(set) var debugErrorInfo: Error?
     
     /// Info about play status
-    @Published public private(set) var isPlayingInfo: Bool = true
+    @Published public private(set) var playingInfo: PlayingInfo = PlayingInfo(hasStarted: false, isPlaying: false)
     
     // Publishers
     public var outputScreenPublisher: Published<[Bool]>.Publisher { $outputScreen }
     public var outputSoundTimerPublisher: Published<UByte>.Publisher { $outputSoundTimer}
     public var debugSystemStateInfoPublisher: Published<Chip8SystemState?>.Publisher { $debugSystemStateInfo }
     public var debugErrorInfoPublisher: Published<Error?>.Publisher { $debugErrorInfo }
-    public var isPlayingStatusInfoPublisher: Published<Bool>.Publisher { $isPlayingInfo }
+    public var playingInfoPublisher: Published<PlayingInfo>.Publisher { $playingInfo }
     
+    /// Logger is by default EmulationConsoleLogger, to disable logging set it to nil, or replace it with your own implementation, for example logging into file.
     public init(parser: Chip8OperationParserProtocol = Chip8OperationParser(), logger: EmulationLoggerProtocol? = EmulationConsoleLogger()) {
         self.logger = logger
         self.opCodeParser = parser
@@ -110,6 +111,7 @@ public class Chip8EmulationCore: ObservableObject, Chip8EmulationCoreProtocol {
             await resetPublishers()
             self.system = Chip8System(parser: opCodeParser, logger: logger) // Reset the system
             self.program = program
+            self.hasEmulationStarted = true
             self.isPlaying = true
             
             system.loadProgram(program.contentROM)
@@ -134,6 +136,8 @@ public class Chip8EmulationCore: ObservableObject, Chip8EmulationCoreProtocol {
             
             let timeStart = Date()
             for _ in 0..<systemCpuInstructionsCountPerFrame {
+                if Task.isCancelled { return }
+                
                 try system.emulateSingleCycle()
                 await publishDebugInfo()
             }
@@ -173,8 +177,11 @@ public class Chip8EmulationCore: ObservableObject, Chip8EmulationCoreProtocol {
         }
     }
     
-    public func stop() {
+    public func stop() async {
+        isPlaying = false;
+        hasEmulationStarted = false;
         emulationTask?.cancel()
+        await resetPublishers()
     }
 
     public func exportState() -> EmulationState? {
@@ -184,7 +191,7 @@ public class Chip8EmulationCore: ObservableObject, Chip8EmulationCoreProtocol {
     
     private func publishDebugInfo(error: Error? = nil) async {
         await MainActor.run {
-            isPlayingInfo = isPlaying
+            playingInfo = PlayingInfo(hasStarted: hasEmulationStarted, isPlaying: isPlaying)
             debugSystemStateInfo = system.state
             debugErrorInfo = error
         }
@@ -203,6 +210,22 @@ public class Chip8EmulationCore: ObservableObject, Chip8EmulationCoreProtocol {
             outputSoundTimer = 0
             debugSystemStateInfo = nil
             debugErrorInfo = nil
+            playingInfo = PlayingInfo(hasStarted: false, isPlaying: false)
         }
+    }
+}
+
+public struct PlayingInfo: Equatable, Codable {
+    public var hasStarted: Bool
+    public var isPlaying: Bool
+    
+    public init(hasStarted: Bool, isPlaying: Bool) {
+        self.hasStarted = hasStarted
+        self.isPlaying = isPlaying
+    }
+    
+    public static func == (lhs: PlayingInfo, rhs: PlayingInfo) -> Bool {
+        return lhs.hasStarted == rhs.hasStarted &&
+        lhs.isPlaying == rhs.isPlaying
     }
 }
