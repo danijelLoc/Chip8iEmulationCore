@@ -32,11 +32,10 @@ final class Chip8EmuCoreTests: XCTestCase {
         
         let program = Chip8Program(name: "007", contentROM: draw007)
         
-        var cb = Set<AnyCancellable>()
-        
-        core.$outputScreen.sink { value in
-            // print(EmulationConsoleLogger.getStringOutput(value, width: 64, height: 32))
-        }.store(in: &cb)
+//        var cb = Set<AnyCancellable>()
+//        core.$outputScreen.sink { value in
+//            // print(EmulationConsoleLogger.getStringOutput(value, width: 64, height: 32))
+//        }.store(in: &cb)
         
         await core.emulate(program)
         
@@ -44,11 +43,11 @@ final class Chip8EmuCoreTests: XCTestCase {
         let selectedArea = core.outputScreen.getSelectedArea(locationX: 10, locationY: 0, selectedWidth: 8, selectedHeight: 5, totalWidth: 64, totalHeight: 32)
         let selectedAreaData = selectedArea?.toRowsBytes(totalWidth: 8, totalHeight: 5)
         // Digit 7 font character byte representation
-        let fontCharacterStartingAddress: Int = core.debugSystemStateInfo!.fontStartingLocation.toInt + 7 * 5
-        let fontCharacterData = Array(core.debugSystemStateInfo!.randomAccessMemory[fontCharacterStartingAddress..<fontCharacterStartingAddress+5])
+        let fontCharacterStartingAddress: Int = core.debugSystemState.fontStartingLocation.toInt + 7 * 5
+        let fontCharacterData = Array(core.debugSystemState.randomAccessMemory[fontCharacterStartingAddress..<fontCharacterStartingAddress+5])
         
         XCTAssertEqual(fontCharacterData, selectedAreaData) // Font character 7 is drawn on the screen
-        XCTAssertEqual(0, core.debugSystemStateInfo?.registers[0xF]) // No collision was detected
+        XCTAssertEqual(0, core.debugSystemState.registers[0xF]) // No collision was detected
         // print(EmulationConsoleLogger.getStringOutput(core.outputScreen, width: 64, height: 32)) // Show final output screen state in terminal
         
         XCTAssertEqual(EmulationError.unknownOpcode(opcode: 0x0), core.debugErrorInfo as! EmulationError) // Error has halted program execution and debug info was sent to observers
@@ -64,7 +63,7 @@ final class Chip8EmuCoreTests: XCTestCase {
         await core.emulate(program)
         
         XCTAssertEqual(EmulationError.unknownOpcode(opcode: 0x0), core.debugErrorInfo as! EmulationError) // Error has halted program execution and debug info was sent to observers
-        XCTAssertEqual(0x200, core.debugSystemStateInfo?.pc) // Execution was halted immediately because of unknown operation code at 0x200 so PC is not changed
+        XCTAssertEqual(0x200, core.debugSystemState.pc) // Execution was halted immediately because of unknown operation code at 0x200 so PC is not changed
         
         unsupported = [
             0x60, 0x00, // Set V0 to 0 (starting x position for 0) - regular operation
@@ -74,7 +73,7 @@ final class Chip8EmuCoreTests: XCTestCase {
         program = Chip8Program(name: "unsupported", contentROM: unsupported)
         await core.emulate(program)
         
-        XCTAssertEqual(0xFFF, core.debugSystemStateInfo?.pc) // Jump was made and system could not get second part of new opcode
+        XCTAssertEqual(0xFFF, core.debugSystemState.pc) // Jump was made and system could not get second part of new opcode
         XCTAssertEqual(EmulationError.opcodeFetchError(address: 0xFFF), core.debugErrorInfo as! EmulationError) // Error has halted program execution and debug info was sent to observers
     }
     
@@ -97,11 +96,10 @@ final class Chip8EmuCoreTests: XCTestCase {
         
         let program = Chip8Program(name: "Key", contentROM: waitForKey)
         
-        var cb = Set<AnyCancellable>()
-        
-        core.$outputScreen.sink { value in
-            // print(EmulationConsoleLogger.getStringOutput(value, width: 64, height: 32))
-        }.store(in: &cb)
+//        var cb = Set<AnyCancellable>()
+//        core.$outputScreen.sink { value in
+//            // print(EmulationConsoleLogger.getStringOutput(value, width: 64, height: 32))
+//        }.store(in: &cb)
         
         let emuTask = Task {
             await core.emulate(program)

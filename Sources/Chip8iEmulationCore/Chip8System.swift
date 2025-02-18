@@ -30,22 +30,31 @@ internal class Chip8System {
         }
     }
     
-    internal init(parser: Chip8OperationParserProtocol = Chip8OperationParser(), font: [UByte] = Chip8SystemState.DefaultFontSet, logger: EmulationLoggerProtocol? = .none) {
+    internal init(parser: Chip8OperationParserProtocol = Chip8OperationParser(), logger: EmulationLoggerProtocol? = .none) {
         self._state = Chip8SystemState()
         self.logger = logger
         self.parser = parser
-        // Load font set
-        state.randomAccessMemory.replaceSubrange(state.fontStartingLocation.toInt..<(state.fontStartingLocation.toInt+80), with: font)
     }
     
     /// Load program rom into system ram at location 0x200 (512) where pc starts at default.
     internal func loadProgram(_ programROM: [UByte]) {
+        // Load the program/game into RAM
         state.randomAccessMemory.replaceSubrange(512..<(512+programROM.count), with: programROM)
+    }
+    
+    internal func loadFont(_ font: [UByte] = Chip8SystemState.DefaultFontSet) {
+        // Load font set into RAM
+        state.randomAccessMemory.replaceSubrange(state.fontStartingLocation.toInt..<(state.fontStartingLocation.toInt+80), with: font)
+    }
+    
+    internal func reset() {
+        // Resets the system including clearing RAM and registers.
+        state = Chip8SystemState()
     }
     
     /// Executes single parsed operation of opcode at memory location saved in PC
     internal func emulateSingleCycle() throws {
-        // Fetch Opcode
+        // Fetch Opcode from RAM
         let opCode: UShort = try fetchOperationCode(memoryLocation: state.pc)
         // Decode Opcode
         let operation = parser.decode(opCode)
@@ -64,7 +73,6 @@ internal class Chip8System {
         
         operation.execute(state: &self.state)
     }
-    
     
     internal func fetchOperationCode(memoryLocation: UShort) throws -> UShort  {
         guard memoryLocation < 0xFFF else {
@@ -93,10 +101,10 @@ internal class Chip8System {
     }
     
     internal func keyDown(key: UByte) {
-        state.InputKeys[key.toInt] = true
+        state.inputKeys[key.toInt] = true
     }
     
     internal func keyUp(key: UByte) {
-        state.InputKeys[key.toInt] = false
+        state.inputKeys[key.toInt] = false
     }
 }

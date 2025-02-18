@@ -8,6 +8,9 @@
 import Foundation
 
 
+/// Protocol for Chip8 Operation Commands. Each command executes its changes on Chip8SystemState registers and memory.
+///
+///  Note that all commands <b>besides skip and jump/subroutine</b> ones also update the PC+=2
 public protocol Chip8OperationCommand: Equatable {
     func execute(state: inout Chip8SystemState)
 }
@@ -19,12 +22,12 @@ public struct ClearScreen: Chip8OperationCommand {
     public init() {}
 
     public func execute(state: inout Chip8SystemState) {
-        state.Output = Array(repeating: false, count: 64*32)
+        state.output = Array(repeating: false, count: 64*32)
         state.pc += 2
     }
 }
 
-/// Calls the subroutine at the given address. First value of PC + 2 (address of next instruction) will be saved into call stack. Then PC will be set to address in arguments.
+/// Calls the subroutine at the given address. First, value of PC + 2 (address of next instruction) will be saved into call stack. Then PC will be set to address in arguments.
 ///
 /// 2NNN - call subroutine at NNN
 public struct CallSubroutine: Chip8OperationCommand {
@@ -154,9 +157,9 @@ public struct ConditionalSkipKeyDown: Chip8OperationCommand {
     public func execute(state: inout Chip8SystemState) {
         let registerValue = state.registers[registerIndex]
         let keyIndex = registerValue;
-        state.UsedKeysHelper.insert(keyIndex);
+        state.requiredKeysHelper.insert(keyIndex);
         
-        let keyState = state.InputKeys[keyIndex.toInt]
+        let keyState = state.inputKeys[keyIndex.toInt]
         if isKeyDown && keyState || !isKeyDown && !keyState {
             state.pc += 4
         } else {
@@ -176,20 +179,20 @@ public struct ConditionalPauseUntilKeyTap: Chip8OperationCommand {
     }
 
     public func execute(state: inout Chip8SystemState) {
-        if let keyIndexToBeReleased = state.InputKeyIndexToBeReleased {
-            if state.InputKeys[keyIndexToBeReleased.toInt] == false {
+        if let keyIndexToBeReleased = state.inputKeyIndexToBeReleased {
+            if state.inputKeys[keyIndexToBeReleased.toInt] == false {
                 state.registers[registerIndex] = keyIndexToBeReleased // save index of pressed and released key into VX
-                state.InputKeyIndexToBeReleased = nil // reset key to be released TODO: HMMM
+                state.inputKeyIndexToBeReleased = nil // reset key to be released TODO: HMMM
                 state.pc += 2
             }
         } else {
-            let keyPressedDown = state.InputKeys.enumerated().first { (index, value) in
+            let keyPressedDown = state.inputKeys.enumerated().first { (index, value) in
                 value == true
             }
             
             if let keyPressedDown = keyPressedDown {
-                state.UsedKeysHelper.insert(UByte(keyPressedDown.0));
-                state.InputKeyIndexToBeReleased = UByte(keyPressedDown.0) // save index of pressed key and wait for it to be released
+                state.requiredKeysHelper.insert(UByte(keyPressedDown.0));
+                state.inputKeyIndexToBeReleased = UByte(keyPressedDown.0) // save index of pressed key and wait for it to be released
             }
         }
     }
@@ -499,13 +502,13 @@ public struct DrawSprite: Chip8OperationCommand {
                 if locationX+j >= 64 {
                     break
                 }
-                if locationX+j + (locationY+i)*64 >= state.Output.count {
+                if locationX+j + (locationY+i)*64 >= state.output.count {
                     continue
                 }
-                let pixelBefore = state.Output[locationX+j + (locationY+i)*64]
+                let pixelBefore = state.output[locationX+j + (locationY+i)*64]
                 let spritePixel = Bool.fromOneOrZero((sprite[i] & UInt8(NSDecimalNumber(decimal: pow(2, (7-j))).intValue)) >> (7-j))
                 let pixel = spritePixel == false ? pixelBefore : pixelBefore.xor(other: spritePixel)
-                state.Output[locationX+j + (locationY+i)*64] = pixel
+                state.output[locationX+j + (locationY+i)*64] = pixel
                 if (pixel != pixelBefore && pixelBefore == true) {
                     state.registers[15] = 1 // collision
                 }

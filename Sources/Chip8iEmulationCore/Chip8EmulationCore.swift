@@ -21,7 +21,7 @@ public protocol Chip8EmulationCoreProtocol {
     var outputSoundTimerPublisher: Published<UByte>.Publisher { get }
     
     /// A publisher that emits changes to the debugSystemStateInfo value.
-    var debugSystemStateInfoPublisher: Published<Chip8SystemState?>.Publisher { get }
+    var debugSystemStateInfoPublisher: Published<Chip8SystemState>.Publisher { get }
     
     /// Debug Info about encountered error
     var debugErrorInfoPublisher: Published<Error?>.Publisher { get }
@@ -47,14 +47,14 @@ public protocol Chip8EmulationCoreProtocol {
     func exportState() -> EmulationState?
     
     /// Chip8 Gameplay key pressed down. See Chip8Key enum for more information.
-    func onKeyDown(_ key: EmulationControls.Chip8Key)
+    func onKeyDown(_ key: Chip8Key)
     
     /// Chip8 Gameplay key released. See Chip8Key enum for more information.
-    func onKeyUp(_ key: EmulationControls.Chip8Key)
+    func onKeyUp(_ key: Chip8Key)
 }
 
 /// Emulation Core that should be used for starting emulation, sending inputs and subscribing to its screen and sound output. It also includes optional debug output info for advanced users. This is a ViewModel that creates execution loop and communicates with internal Chip8 program operations processing modules.
-public class Chip8EmulationCore: ObservableObject, Chip8EmulationCoreProtocol {
+public class Chip8EmulationCore: Chip8EmulationCoreProtocol {
     /// Internal Chip8 System/CPU that executes the commands
     private var system: Chip8System
     /// Internal parser used for Chip8 operation codes
@@ -78,23 +78,23 @@ public class Chip8EmulationCore: ObservableObject, Chip8EmulationCoreProtocol {
     
     /// Output screen buffer 64 width x 32 height. Pixel can be 0 or 1. True is turned On and False is turned Off.
     /// One example of how to subscribe to this data is to create CGImage from it using fromMonochromeBitmap extension method and then show it in Image element.
-    @Published public private(set) var outputScreen: [Bool] = Array(repeating: false, count: 64*32)
+    @Published internal private(set) var outputScreen: [Bool] = Array(repeating: false, count: 64*32)
     /// Indicates if emulator should ply the sound. Returns (playSound, SoundTimerValue). If timer is greater than 0 playSound will be true.
     /// Important: On every change of timer value that is greater than 0 you should play short sound (tick).
-    @Published public private(set) var outputSoundTimer: UByte = 0
+    @Published internal private(set) var outputSoundTimer: UByte = 0
     
     /// Debug Info about current Chip8 System State
-    @Published public private(set) var debugSystemStateInfo: Chip8SystemState?
+    @Published internal private(set) var debugSystemState: Chip8SystemState
     /// Debug Info about encountered error
-    @Published public private(set) var debugErrorInfo: Error?
+    @Published internal private(set) var debugErrorInfo: Error?
     
     /// Info about play status
-    @Published public private(set) var playingInfo: PlayingInfo = PlayingInfo(hasStarted: false, isPlaying: false)
+    @Published internal private(set) var playingInfo: PlayingInfo = PlayingInfo(hasStarted: false, isPlaying: false)
     
     // Publishers
     public var outputScreenPublisher: Published<[Bool]>.Publisher { $outputScreen }
     public var outputSoundTimerPublisher: Published<UByte>.Publisher { $outputSoundTimer}
-    public var debugSystemStateInfoPublisher: Published<Chip8SystemState?>.Publisher { $debugSystemStateInfo }
+    public var debugSystemStateInfoPublisher: Published<Chip8SystemState>.Publisher { $debugSystemState }
     public var debugErrorInfoPublisher: Published<Error?>.Publisher { $debugErrorInfo }
     public var playingInfoPublisher: Published<PlayingInfo>.Publisher { $playingInfo }
     
@@ -102,8 +102,10 @@ public class Chip8EmulationCore: ObservableObject, Chip8EmulationCoreProtocol {
     public init(parser: Chip8OperationParserProtocol = Chip8OperationParser(), logger: EmulationLoggerProtocol? = EmulationConsoleLogger()) {
         self.logger = logger
         self.opCodeParser = parser
-        self.system = Chip8System(parser: parser, logger: logger)
-
+        let system = Chip8System(parser: parser, logger: logger)
+        self.system = system
+        self.debugSystemState = system.state
+        self.debugErrorInfo = nil
     }
     
     public func emulate(_ program: Chip8Program) async {
@@ -114,6 +116,7 @@ public class Chip8EmulationCore: ObservableObject, Chip8EmulationCoreProtocol {
             self.hasEmulationStarted = true
             self.isPlaying = true
             
+            system.loadFont()
             system.loadProgram(program.contentROM)
             
             emulationTask = Task { try await emulationLoop(program: program) }
@@ -158,11 +161,11 @@ public class Chip8EmulationCore: ObservableObject, Chip8EmulationCoreProtocol {
     }
     
     
-    public func onKeyDown(_ key: EmulationControls.Chip8Key) {
+    public func onKeyDown(_ key: Chip8Key) {
         system.keyDown(key: key.rawValue)
     }
 
-    public func onKeyUp(_ key: EmulationControls.Chip8Key) {
+    public func onKeyUp(_ key: Chip8Key) {
         system.keyUp(key: key.rawValue)
     }
     
@@ -181,6 +184,7 @@ public class Chip8EmulationCore: ObservableObject, Chip8EmulationCoreProtocol {
         isPlaying = false;
         hasEmulationStarted = false;
         emulationTask?.cancel()
+        system.reset()
         await resetPublishers()
     }
 
@@ -192,14 +196,14 @@ public class Chip8EmulationCore: ObservableObject, Chip8EmulationCoreProtocol {
     private func publishDebugInfo(error: Error? = nil) async {
         await MainActor.run {
             playingInfo = PlayingInfo(hasStarted: hasEmulationStarted, isPlaying: isPlaying)
-            debugSystemStateInfo = system.state
+            debugSystemState = system.state
             debugErrorInfo = error
         }
     }
     
     private func publishSoundAndScreenOutput() async {
         await MainActor.run {
-            outputScreen = system.state.Output
+            outputScreen = system.state.output
             outputSoundTimer = system.state.soundTimer
         }
     }
@@ -208,7 +212,7 @@ public class Chip8EmulationCore: ObservableObject, Chip8EmulationCoreProtocol {
         await MainActor.run {
             outputScreen = Array(repeating: false, count: 64*32)
             outputSoundTimer = 0
-            debugSystemStateInfo = nil
+            debugSystemState = system.state
             debugErrorInfo = nil
             playingInfo = PlayingInfo(hasStarted: false, isPlaying: false)
         }

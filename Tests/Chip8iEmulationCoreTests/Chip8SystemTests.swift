@@ -17,6 +17,8 @@ final class Chip8SystemTests: XCTestCase {
         // Mark your test throws to produce an unexpected failure when your test encounters an uncaught error.
         // Mark your test async to allow awaiting for asynchronous code to complete. Check the results with assertions afterwards.
         let system = Chip8System()
+        
+        system.loadFont()
         XCTAssertEqual(Chip8SystemState.DefaultFontSet[0], system.state.randomAccessMemory[system.state.fontStartingLocation.toInt]) // first byte of font
         XCTAssertEqual(Chip8SystemState.DefaultFontSet[0x4F], system.state.randomAccessMemory[system.state.fontStartingLocation.toInt + Int(0x4F)]) // last (80th) byte of font at index 0x4F (79)
         
@@ -48,6 +50,7 @@ final class Chip8SystemTests: XCTestCase {
     
     func testDrawOperationAndCollision() throws {
         let system = Chip8System()
+        system.loadFont()
         
         // Set value 2 into V0, other registers are set to zero
         try system.executeOperation(operation: SetValueToRegister(registerIndex: 0, value: 2))
@@ -61,7 +64,7 @@ final class Chip8SystemTests: XCTestCase {
         //print(EmulationConsoleLogger.getStringOutput(system.state.Output, width: 64, height: 32))
         
         // Cut out selected screen area x0y0 x8y5
-        var selectedArea = system.state.Output.getSelectedArea(locationX: 0, locationY: 0, selectedWidth: 8, selectedHeight: 5, totalWidth: 64, totalHeight: 32)
+        var selectedArea = system.state.output.getSelectedArea(locationX: 0, locationY: 0, selectedWidth: 8, selectedHeight: 5, totalWidth: 64, totalHeight: 32)
         // [Bool] pixels -> [Byte] sprite data where 1 byte is 1 row
         var selectedAreaData = selectedArea?.toRowsBytes(totalWidth: 8, totalHeight: 5)
         
@@ -76,7 +79,7 @@ final class Chip8SystemTests: XCTestCase {
         // Draw the digit 2 on the same place as before -> Collision
         try system.executeOperation(operation: DrawSprite(height: 0x5, registerXIndex: 3, registerYIndex: 4))
         
-        selectedArea = system.state.Output.getSelectedArea(locationX: 0, locationY: 0, selectedWidth: 8, selectedHeight: 5, totalWidth: 64, totalHeight: 32)
+        selectedArea = system.state.output.getSelectedArea(locationX: 0, locationY: 0, selectedWidth: 8, selectedHeight: 5, totalWidth: 64, totalHeight: 32)
         selectedAreaData = selectedArea?.toRowsBytes(totalWidth: 8, totalHeight: 5)
         XCTAssertNotEqual(fontCharacterData, selectedAreaData) // Font character is not on the screen anymore
         XCTAssertEqual([0, 0, 0, 0, 0], selectedAreaData) // That area is now empty/erased cause of collision
@@ -117,15 +120,15 @@ final class Chip8SystemTests: XCTestCase {
         let key1: UByte = 0x1
         let key1Index = key1.toInt // Chip8 key 0x1 is saved at the index 1 in the system.state.InputKeys. Same for the rest of the 16 keys. 0x0 at index 0 and 0xF at index 15
         
-        XCTAssertEqual(false, system.state.InputKeys[key1.toInt]) // All keys initially released (not pressed)
+        XCTAssertEqual(false, system.state.inputKeys[key1.toInt]) // All keys initially released (not pressed)
         
         // Press down one key
         system.keyDown(key: key1)
-        XCTAssertEqual(true, system.state.InputKeys[key1Index])
+        XCTAssertEqual(true, system.state.inputKeys[key1Index])
         
         // Release the key
         system.keyUp(key: key1)
-        XCTAssertEqual(false, system.state.InputKeys[key1Index]) // Key should be released now
+        XCTAssertEqual(false, system.state.inputKeys[key1Index]) // Key should be released now
         
         let keyF: UByte = 0xF
         let keyFIndex = keyF.toInt
@@ -133,13 +136,13 @@ final class Chip8SystemTests: XCTestCase {
         // Multiple keys can be pressed down at the same time
         system.keyDown(key: key1)
         system.keyDown(key: keyF)
-        XCTAssertEqual(true, system.state.InputKeys[key1Index])
-        XCTAssertEqual(true, system.state.InputKeys[keyFIndex])
+        XCTAssertEqual(true, system.state.inputKeys[key1Index])
+        XCTAssertEqual(true, system.state.inputKeys[keyFIndex])
         
         system.keyUp(key: key1)
         system.keyUp(key: keyF)
-        XCTAssertEqual(false, system.state.InputKeys[key1Index])
-        XCTAssertEqual(false, system.state.InputKeys[keyFIndex])
+        XCTAssertEqual(false, system.state.inputKeys[key1Index])
+        XCTAssertEqual(false, system.state.inputKeys[keyFIndex])
     }
 
     func testPerformanceExample() throws {
