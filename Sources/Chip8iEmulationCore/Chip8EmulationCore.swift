@@ -8,7 +8,8 @@
 import Combine
 import Foundation
 
-/// Protocol for emulation core that should be used for starting emulation, sending inputs and subscribing to its screen and sound output. It also includes optional debug output info for advanced users. This is a ViewModel that creates execution loop and communicates with internal Chip8 program operations processing modules.
+/// Protocol for emulation core that should be used for starting emulation, sending inputs and subscribing to its screen and sound output. It also includes optional debug output info for advanced users.
+/// This is a ViewModel that creates execution loop and communicates with internal Chip8 program operations processing modules.
 public protocol Chip8EmulationCoreProtocol {
 
     /// Output screen buffer 64 width x 32 height. Pixel can be 0 or 1. True is turned On and False is turned Off.
@@ -53,7 +54,8 @@ public protocol Chip8EmulationCoreProtocol {
     func onKeyUp(_ key: Chip8Key)
 }
 
-/// Emulation Core that should be used for starting emulation, sending inputs and subscribing to its screen and sound output. It also includes optional debug output info for advanced users. This is a ViewModel that creates execution loop and communicates with internal Chip8 program operations processing modules.
+/// Emulation Core that should be used for starting emulation, sending inputs and subscribing to its screen and sound output. It also includes optional debug output info for advanced users.
+/// This is a ViewModel that creates execution loop and communicates with internal Chip8 program operations processing modules.
 public class Chip8EmulationCore: Chip8EmulationCoreProtocol {
     /// Internal Chip8 System/CPU that executes the commands
     private var system: Chip8System
@@ -220,13 +222,13 @@ public class Chip8EmulationCore: Chip8EmulationCoreProtocol {
     }
 
     @MainActor
-    private func publishSoundAndScreenOutput() {
+    private func publishSoundAndScreenOutput() async {
         outputScreen = system.state.output
         outputSoundTimer = system.state.soundTimer
     }
 
     @MainActor
-    private func resetPublishers() {
+    private func resetPublishers() async {
         outputScreen = Array(repeating: false, count: 64 * 32)
         outputSoundTimer = 0
         debugSystemState = system.state

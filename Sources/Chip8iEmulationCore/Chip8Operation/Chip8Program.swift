@@ -10,7 +10,7 @@ import CryptoKit
 
 /// Represents compiled program for Chip8 system, for example game "Pong". Compiled program binary data can be loaded from .ch8 files for example.
 /// Compiled program binary data aka machine code includes operation codes and sprites.
-public struct Chip8Program {
+public struct Chip8Program: Equatable {
     /// Name of the program, used for list of programs in emulator frontend for example
     public let name: String
     /// Read Only Memory - ROM binary content of the compiled program
@@ -33,5 +33,9 @@ public struct Chip8Program {
         
         // Convert the hash to a hex string
         return hash.map { String(format: "%02hhx", $0) }.joined()
+    }
+    
+    public static func == (lhs: Chip8Program, rhs: Chip8Program) -> Bool {
+        return lhs.contentHash == rhs.contentHash
     }
 }
