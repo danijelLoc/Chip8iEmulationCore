@@ -43,7 +43,7 @@
       shouldUseLaunchSchemeArgsEnv = "YES">
       <TestPlans>
          <TestPlanReference
-            reference = "container:Tests/Chip8iEmulationCoreTestPlan.xctestplan"
+            reference = "container:Tests/Chip8iEmulationCoreTests.xctestplan"
             default = "YES">
          </TestPlanReference>
       </TestPlans>

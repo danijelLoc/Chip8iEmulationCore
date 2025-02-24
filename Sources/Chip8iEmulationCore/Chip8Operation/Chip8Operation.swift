@@ -356,9 +356,9 @@ public struct SetFontCharacterAddressToIndexRegister: Chip8OperationCommand {
     }
 }
 
-/// Add value from register X to the Index register I
+/// Add value of VX to index register I
 ///
-/// DXYN - Add value from VX to Index register
+/// FX15 - add value of VX to index register I, NOTE: carry flag is not changed
 public struct AddRegisterValueToIndexRegister: Chip8OperationCommand {
     public let registerIndex: Int
 
@@ -373,9 +373,11 @@ public struct AddRegisterValueToIndexRegister: Chip8OperationCommand {
     }
 }
 
-/// Store registers from V0 to VX into memory (or restore from memory if isRestoring is true)
+/// Storing values from registers (from register0 til and including registerX) into memory addresses starting from I, or restoring them.
 ///
-/// 8XY0 - Store registers V0 to VX into memory (or restore from memory if isRestoring)
+/// FX55 - Store registers up to index X in memory addresses starting from the one stored in I
+///
+/// FX65 - Restore registers up to index X from memory addresses starting from the one stored in I
 public struct RegistersStorage: Chip8OperationCommand {
     public let maxIncludedRegisterIndex: Int
     public let isRestoring: Bool
@@ -399,9 +401,10 @@ public struct RegistersStorage: Chip8OperationCommand {
     }
 }
 
-/// Store the decimal representation of register X into memory
+/// Store decimal digits of VX value (UByte in decimal format so 000 - 255) in memory addresses starting from the one stored in register I.
+/// Leftmost digits is saved to address I, second one is saved at I+1 and third digit is saved at I+2
 ///
-/// FX33 - Store the decimal representation of VX (register X) into memory at I
+/// FX33 - Store decimal digits of VX value (in decimal format 000 - 255) in memory addresses starting from the one stored in I
 public struct RegisterStoreDecimalDigits: Chip8OperationCommand {
     public let registerXIndex: Int
 
@@ -423,9 +426,10 @@ public struct RegisterStoreDecimalDigits: Chip8OperationCommand {
     }
 }
 
-/// Store the current value of the delay timer into register
+    
+/// Store value of delay timer into registerX
 ///
-/// FX15 - Store the current value of delay timer into VX register
+/// FX07 sets VX to the current value of the delay timer
 public struct DelayTimerStore: Chip8OperationCommand {
     public let registerIndex: Int
 
@@ -439,9 +443,9 @@ public struct DelayTimerStore: Chip8OperationCommand {
     }
 }
 
-/// Set the delay timer value from register VX
+/// Set value of VX to delay timer
 ///
-/// FX18 - Set the delay timer value from register VX
+/// FX15 sets the delay timer to the value in VX
 public struct DelayTimerSet: Chip8OperationCommand {
     public let registerIndex: Int
 
@@ -455,9 +459,9 @@ public struct DelayTimerSet: Chip8OperationCommand {
     }
 }
 
-/// Set the sound timer value from register VX
+/// Set value of VX to sound timer
 ///
-/// FX1E - Set the sound timer value from register VX
+/// FX18 sets the sound timer to the value in VX
 public struct SoundTimerSet: Chip8OperationCommand {
     public let registerIndex: Int
 
@@ -471,9 +475,11 @@ public struct SoundTimerSet: Chip8OperationCommand {
     }
 }
 
-/// Draw a sprite at position (VX, VY) with the given height (N)
+/// Draw sprite that  has given height at screen location pX = value in register with index X, pY= value in register with index Y. Sprite is fetched from memory starting at address stored in index register I.
+/// One pixel is one bit so sprite width is always 8 pixels, hence one pixel row fits into one memory address. Sprite is saved in memory addresses I..<I+height. Height is 4 bit value 0..F.
+/// If any pixel is turned off after this, indicating collision, then value of register 15 (VF) is set to 1.
 ///
-/// DXYN - Draw sprite at position (VX, VY) with given height (N)
+/// DXYN - draws N pixels tall sprite from memory location that Index register has onto screen at location pX = value of X register, pY= value of Y register
 public struct DrawSprite: Chip8OperationCommand {
     public let height: Int
     public let registerXIndex: Int
