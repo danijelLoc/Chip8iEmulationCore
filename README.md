@@ -149,15 +149,21 @@ let emulationCore = Chip8EmulationCore(soundHandler: soundHandler)
 ### Emulation status update with pausing and exiting
 To get current emulation status you can use `playingInfoPublisher`, to update it you can use methods: `togglePause` for pause/resume, `stop`, and `emulate` to restart the emulation.
 
-### Usage example
+### Usage examples
 
-This is example of integrating the chip8 emulation core and running it from simple macOS emulator frontend which provides game binary and key inputs to the core, and shows output from the core.
+### Simple macOS frontend
 
-With code provided in this readme you should be able to recreate this. Chip8 game ROMs aka .ch8 files can found online and are mainly public domain.
+With code provided in this README, you should be able to recreate this simple macOS frontend. Chip8 game ROMs aka .ch8 files can found online and are mainly public domain. 
+Emulator frontend provides game binary and key inputs to the core and shows output from the core.
 
 <img src="https://github.com/danijelLoc/Chip8iEmulationCore/blob/screenshots/.assets/example-frontend.png?raw=true" alt="Usage example in macos app" width="700"/>
 
-### License
+### More complex iOS and macOS Frontend 
+
+[Chip8iEmulationFrontend](https://github.com/danijelLoc/Chip8iEmulationFrontend)
+This multiplatform SwiftUI example uses the majority of the core package features.
+
+## License
 This package is licensed under the MIT License. See the `LICENSE` file for more information
 
 
