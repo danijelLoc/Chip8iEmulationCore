@@ -54,7 +54,7 @@ final class Chip8EmuCoreTests: XCTestCase {
     }
     
     func testErrorHandling() async throws {
-        let core = Chip8EmulationCore(logger: .none);
+        let core = Chip8EmulationCore(soundHandler: nil, logger: .none);
         var unsupported: [UByte] = [
             0x00, 0x00 // Unsupported operation
         ]
