@@ -14,12 +14,12 @@ public class PrerecordedSoundHandler: SoundHandlerProtocol {
     private var audioPlayer: AVAudioPlayer?
     private var isEmulationPaused: Bool = false
     
-    public init(shortSoundUrl: URL) {
-        loadSound(shortSoundUrl)
+    public init(with soundUrl: URL) {
+        loadSound(soundUrl)
     }
     
-    public init(resourceNameWithExtension: String) {
-        guard let soundURL = Bundle.main.url(forResource: resourceNameWithExtension, withExtension: nil) else {
+    public init(with bundleNameWithExtension: String) {
+        guard let soundURL = Bundle.main.url(forResource: bundleNameWithExtension, withExtension: nil) else {
             print("Failed to locate sound file")
             return
         }

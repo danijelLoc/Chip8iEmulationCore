@@ -23,14 +23,14 @@ In your Swift file where you want to use the emulator:
 ```swift
 import Chip8iEmulationCore
 
-let emulationCore = Chip8EmulationCore()
+let emulationCore = Chip8EmulationCore(soundHandler: nil, logger: nil)
 ```
 
 ### Load Chip8 program
 First, load the chip8 program binary read-only (ROM) data `[UByte]` from the filesystem or otherwise and save it in `Chip8Program` structure ready for emulation.
 
 ```swift
-let programROM = Chip8Program(name: "My Pong Game", contentROM: myPongGameROMData)
+let chip8Program = Chip8Program(name: "My Pong Game", contentROM: myPongGameROMData)
 ```
 
 ### Start emulation
@@ -38,7 +38,7 @@ let programROM = Chip8Program(name: "My Pong Game", contentROM: myPongGameROMDat
 The `emulate` function runs in an infinite loop (Chip8 programs don't have exit command), so ensure that it is run in a proper asynchronous context.
 ```swift
 Task {
-    await emulationCore.emulate(program: programROM)
+    await emulationCore.emulate(chip8Program)
 }
 ```
 
@@ -52,72 +52,108 @@ Chip8 has 16 system keys, from 0 to F.
 ```
 To handle key press and release events:
 ```swift
-emulationCore.onKeyDown(key: .Zero)  // Example: Press down Chip8 key '0'
-emulationCore.onKeyDown(key: .One)  // Example: Press down Chip8 key '1'
-emulationCore.onKeyUp(key: .F)  // Example: Release Chip8 key 'F'
+emulationCore.onKeyDown(.Zero)  // Example: Press down Chip8 key '0'
+emulationCore.onKeyDown(.One)  // Example: Press down Chip8 key '1'
+emulationCore.onKeyUp(.F)  // Example: Release Chip8 key 'F'
 ```
 Use the `onKeyDown` and `onKeyUp` methods to send input key `enum` to the emulator. For more details and example of keyboard bindings see `EmulationControls` module. 
 
-> Note: Keyboard/controller/touchscreen-buttons can be custom mapped to Chip8 keys and this should be done in fronted app, emulation core only accepts `EmulationControls.Chip8Key` enum.
+> Note: Keyboard/controller/touchscreen-buttons can be custom mapped to Chip8 keys and this should be done in fronted app, emulation core only accepts `Chip8Key` enum.
 
-### Observing Output
-The `outputScreen` and `outputSoundTimer` properties are marked with `@Published`, so you can subscribe to them and update the view and play the sound in `SwiftUI`, `UIKit`, or `AppKit`. 
+### Observing Output Publishers
+The `outputScreenPublisher` is used for publishing screen information about emulation output, you can subscribe to it and update the view in `SwiftUI`, `UIKit`, or `AppKit`.
+The `playingInfoPublisher` sends information about status of the emulation like `hasStarted` and `isPlaying` 
 
 ### Screen Output Handling Example
 
-Publisher Buffer `outputScreen` is a 64x32 grid of Boolean values, representing pixel states.
+Publisher Buffer `outputScreenPublisher` is a 64x32 grid of Boolean values, representing pixel states.
 
 One way to reactively display screen updates from `outputScreen` publisher buffer is using `CGImage` extension method `fromMonochromeBitmap` included in the `Chip8iEmulationCore` package.
 
-Here is an example of this approach in macOS frontend app which uses this package. Also included in the example is initialisation of core, starting the game and subscribing to sound timer change.
+Here is an example of this approach in macOS frontend app which uses this package. Also included in the example is initialization of core, starting the game and subscribing to sound timer change.
 
 ```swift
-    @StateObject var emulationCore = Chip8EmulationCore()
-    private let singlePingSound = NSSound(named: NSSound.Name("Ping"))
+var emulationCore = Chip8EmulationCore(soundHandler: PrerecordedSoundHandler(with: "Beep2.wav"), logger: nil)
+@State private var lastFrame: [Bool] = Array(repeating: false, count: 64*32)
 
-    var body: some View {
-        VStack {
-            Image(CGImage.fromMonochromeBitmap(emulationCore.outputScreen, 
-              width: 64, height: 32)!, 
-            scale: 5, label: Text("Output"))
-                .interpolation(.none)
-                .resizable()
-                .scaledToFit()
-        }
-        .padding()
-        .onAppear(perform: {
-            Task {
-                let program = readProgramFromFile(fileName: "Pong.ch8")
-                await emulationCore.emulate(program: program)
-            }
-        })
-        .focusable()
-        .focusEffectDisabled()
-        .onKeyPress(phases: .down, action: onKeyDown)
-        .onKeyPress(phases: .up, action: onKeyUp)
-        .onChange(of: emulationCore.outputSoundTimer) { oldValue, newValue in
-            handleSoundTimerChange(soundTimer: newValue)
-        }
+var body: some View {
+    VStack {
+        Image(CGImage.fromMonochromeBitmap(lastFrame,
+          width: 64, height: 32)!,
+        scale: 5, label: Text("Output"))
+            .interpolation(.none)
+            .resizable()
+            .scaledToFit()
     }
+    .padding()
+    .onAppear(perform: {
+        Task {
+            guard let program = loadGameFromBundle(gameName: "Pong.ch8") else { return }
+            await emulationCore.emulate(program)
+        }
+    })
+    .onReceive(emulationCore.outputScreenPublisher) { frame in
+        self.lastFrame = frame
+    }
+}
 
+private func loadGameFromBundle(gameName: String) -> Chip8Program? {
+    guard let fileUrl = Bundle.main.url(forResource: gameName, withExtension: nil) else { return nil }
+    guard let data = try? Data(contentsOf: fileUrl) else { return nil }
+    let romData = data.compactMap { $0 }
+    return Chip8Program(name: gameName, contentROM: romData)
+}
 ```
 
-### Sound Output Handling Note
-Publisher `outputSoundTimer` is the UByte value of Chip8 System Sound timer. A short sound effect should be played on every value change if that value is larger than 0.
+### Keyboard input example for macOS
+
+This is the code needed for macOS input propagation to the core.
 
 ```swift
-    func handleSoundTimerChange(soundTimer: UByte) {
-        if soundTimer > 0 && !(singlePingSound?.isPlaying == true) {
-            singlePingSound?.play()
-        } else if soundTimer == 0 && singlePingSound?.isPlaying == true {
-            singlePingSound?.stop()
-        }
+// ... 
+
+var body: some View {
+    VStack {
+        // ...
     }
+    // ...
+    .focusable()
+    .focusEffectDisabled()
+    .onKeyPress(phases: .down, action: onKeyDown)
+    .onKeyPress(phases: .up, action: onKeyUp)
+}
+
+private func onKeyDown(key: KeyPress) -> KeyPress.Result {
+    guard let chip8Key = Chip8Key.StandardKeyboardBinding[key.key.character] else { return .ignored }
+    emulationCore.onKeyDown(chip8Key)
+    return .handled
+}
+
+private func onKeyUp(key: KeyPress) -> KeyPress.Result {
+    guard let chip8Key = Chip8Key.StandardKeyboardBinding[key.key.character] else { return .ignored }
+    emulationCore.onKeyUp(chip8Key)
+    return .handled
+}
 ```
+
+
+### Sound Handling Note
+To use sound you need to pass implementation of SoundHandlerProtocol to the Chip8EmulationCore constructor. 
+Existing tested implementation is PrerecordedSoundHandler which requires existing short sound file (1 second beep sound is optimal).
+```swift
+// Example where sound file was in Swift frontend project resources and passed to the core
+let soundHandler = PrerecordedSoundHandler(with: "Beep2.wav") 
+let emulationCore = Chip8EmulationCore(soundHandler: soundHandler)
+```
+
+### Emulation status update with pausing and exiting
+To get current emulation status you can use `playingInfoPublisher`, to update it you can use methods: `togglePause` for pause/resume, `stop`, and `emulate` to restart the emulation.
 
 ### Usage example
 
 This is example of integrating the chip8 emulation core and running it from simple macOS emulator frontend which provides game binary and key inputs to the core, and shows output from the core.
+
+With code provided in this readme you should be able to recreate this. Chip8 game ROMs aka .ch8 files can found online and are mainly public domain.
 
 <img src="https://github.com/danijelLoc/Chip8iEmulationCore/blob/screenshots/.assets/example-frontend.png?raw=true" alt="Usage example in macos app" width="700"/>
 
