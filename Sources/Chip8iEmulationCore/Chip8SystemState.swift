@@ -8,7 +8,7 @@
 import Foundation
 
 /// State of the emulated Chip8 system, including RAM, Registers, Call Stack, Timers, Program Counter, Input Keys States and Output Screen Buffer.
-public struct Chip8SystemState: Codable {
+public struct Chip8SystemState: Codable, Equatable {
     /// 4096 Bytes of memory. Chip8 uses BIG ENDIAN (when saving UShort value  we save upper byte at address x and then lower byte at memory address x+1). Whole program ROM is loaded into the RAM at starting PC address of 0x200.
     public var randomAccessMemory: [UByte]
     
@@ -25,19 +25,22 @@ public struct Chip8SystemState: Codable {
     
     /// if set above 0 timer is counting down. Counting at 60Hz
     public var delayTimer: UByte
-    /// if set above 0 system is beeping and timer is counting down. Counting at 60Hz.
+    /// if set above 0 system is beeping continuously and timer is counting down. Counting at 60Hz.
     public var soundTimer: UByte
     
     /// One dimension Byte array representing output screen (64 width x 32 height). One bit represents one pixel, order from left top of the screen. Rows saved in on dimensional array one after another.
-    public var Output: [Bool] // 64x32
+    public var output: [Bool] // 64x32
     /// Boolean Array containing states of all 16 keys of Chip8. System has buttons marked with Hex digits from 0,1,2 ... E, F. If value at index X is set to True it means that X-th button is pressed.
-    public var InputKeys: [Bool] // 16 keys
+    public var inputKeys: [Bool] // 16 keys
     
     /// Key for FX0A command that was registered to be pressed and now needs to be released.
-    public var InputKeyIndexToBeReleased: UByte?
+    public var inputKeyIndexToBeReleased: UByte?
     
     /// Address of the start of memory where system font is saved. Font is made of 16 character and each takes 5 bytes so 80 bytes from starting address is taken by font data.
     public var fontStartingLocation: UShort
+    
+    /// Helper set to keep track of required keys by the program since Chip8 controls labelling is not intuitive and there is no standard for directional keys between different programs/games.
+    public var requiredKeysHelper: Set<UByte> = []
     
     public init() {
         self.randomAccessMemory = Array(repeating: 0, count: 4096)
@@ -52,18 +55,26 @@ public struct Chip8SystemState: Codable {
         self.delayTimer = 0
         self.soundTimer = 0
         
-        self.Output = Array(repeating: false, count: 64*32)
-        self.InputKeys = Array(repeating: false, count: 16)
-        self.InputKeyIndexToBeReleased = nil
+        self.output = Array(repeating: false, count: 64*32)
+        self.inputKeys = Array(repeating: false, count: 16)
+        self.inputKeyIndexToBeReleased = nil
         
         self.fontStartingLocation = 0x50 // default location for font 0x50 (decimal 80)
+        self.requiredKeysHelper = []
     }
-}
-
-/// A wrapper around the emulated program content id and Chip8SystemState. Saved system state can only be used with specific program/game loaded into the system.
-public struct EmulationState: Codable {
-    /// Unique Id of the program/game ROM data that was loaded into the Chip8System
-    public let programContentHash: String
-    /// State of Chip8 System with all its registers, stack, memory and output buffer
-    public let systemState: Chip8SystemState
+    
+    static public func == (lhs: Chip8SystemState, rhs: Chip8SystemState) -> Bool {
+        return lhs.randomAccessMemory == rhs.randomAccessMemory &&
+        lhs.registers == rhs.registers &&
+        lhs.indexRegister == rhs.indexRegister &&
+        lhs.pc == rhs.pc &&
+        lhs.callStack == rhs.callStack &&
+        lhs.callStackPointer == rhs.callStackPointer &&
+        lhs.delayTimer == rhs.delayTimer &&
+        lhs.soundTimer == rhs.soundTimer &&
+        lhs.output == rhs.output &&
+        lhs.inputKeys == rhs.inputKeys &&
+        lhs.inputKeyIndexToBeReleased == rhs.inputKeyIndexToBeReleased &&
+        lhs.fontStartingLocation == rhs.fontStartingLocation
+    }
 }

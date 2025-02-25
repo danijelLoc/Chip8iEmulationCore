@@ -7,137 +7,536 @@
 
 import Foundation
 
-public enum Chip8Operation: Equatable {
-    
-    /// Unknown operation whose code could not have been parsed
-    case Unknown(operationCode: UShort)
-    
-    /// Clears the screen by setting all pixels to 0.
-    ///
-    /// 0x00E0
-    case ClearScreen
-    
-    /// Calls the subroutine at the given address. First value of PC + 2 (address of next instruction) will be saved into call stack. Then PC will be set to address in arguments
-    ///
-    /// 2NNN - call subroutine at NNN
-    case CallSubroutine(address: UShort)
-    /// Returns from the subroutine by setting the PC to address removed from top of call stack (pop action)
-    ///
-    /// 00EE - return from subroutine
-    case ReturnFromSubroutine
-    /// Jump to address by setting PC to it.
-    ///
-    /// 1NNN - jump (set PC to NNN)
-    case JumpToAddress(address: UShort)
-    /// Jump  to (address + register0) by setting PC to it.
-    ///
-    /// BNNN - jump (set PC to NNN+V0) Note: V0 is register at the index 0
-    case JumpToAddressPlusV0(address: UShort)
-    
-    /// Conditional skip next instruction on comparing register (at the index X) to the value. if condition is met then we will move PC by 4 memory location instead of 2 (current instruction takes 2 memory locations).
-    ///
-    /// 3XNN - Skip next instruction if VX == NN
-    ///
-    /// 4XNN - Skip next instruction if VX != NN
-    case ConditionalSkipRegisterValue(registerIndex: Int, value: UByte, isEqual: Bool)
-    /// Conditional skip next instruction on comparing VX to VY. If condition is met then we will move PC by 4 memory location instead of 2 (current instruction takes 2 memory locations).
-    ///
-    /// 5XY0 - Skip next instruction if VX == VY
-    ///
-    /// 9XY0 - Skip next instruction if VX != VY
-    case ConditionalSkipRegisters(registerXIndex: Int, registerYIndex: Int, isEqual: Bool)
-    /// Conditional skip next instruction if key stored in VX is pressed down or not. If condition is met then we will move PC by 4 memory location instead of 2 (current instruction takes 2 memory locations).
-    ///
-    /// EX9E - Skip next instruction if key stored in VX is pressed down
-    ///
-    /// EXA1 - Skip next instruction if key stored in VX is not pressed down
-    case ConditionalSkipKeyDown(registerIndex: Int, isKeyDown: Bool)
-    /// Conditional wait for any key to be pressed down and released to store it in VX and move to next instruction. If key is pressed (down and released) then increase PC by 2 as always, otherwise don't change PC and remain at current command..
-    ///
-    /// FX0A - Wait until key tap (press and release)  and  store it in VX
-    case ConditionalPauseUntilKeyTap(registerIndex: Int)
-    
-    /// Set value to register
-    ///
-    /// 6XNN - set value NN to register X
-    case SetValueToRegister(registerIndex: Int, value: UByte)
-    /// Set value to register without carry flag change
-    ///
-    /// 7XNN - add value NN to register X, NOTE: carry flag is not changed
-    case AddValueToRegister(registerIndex: Int, value: UByte)
-    /// Set value  to Index register I
-    ///
-    /// ANNN - set value NNN to Index register
-    case SetValueToIndexRegister(value: UShort)
-    /// Set  (value & randomByte) to register
-    ///
-    /// CXNN - set value (NN & Random) to register X
-    case SetValueToRegisterWithRandomness(registerIndex: Int, value: UByte)
-    
-    /// Operations done on values from register X and Y and saved to register X
-    ///
-    /// 8XY0 - Set VX into VY
-    ///
-    /// 8XY1 - Set VX into VX | VY
-    /// 
-    /// 8XY2 - Set VX into VX & VY
-    /// 
-    /// 8XY3 - Set VX into VX ^ VY
-    /// 
-    /// 8XY4 - Set VX into VX + VY
-    /// 
-    /// 8XY5 - Set VX into VX - VY
-    /// 
-    /// 8XY7 - Set VX into VY - VX
-    /// 
-    /// 8XY6 - Set VX into VX >> 1
-    /// 
-    /// 8XYE - Set VX into VX << 1
-    case RegistersOperation(registerXIndex: Int, registerYIndex: Int, operation: RegistersOperation)
 
-    /// Set address of font character saved in VX to Index register I
-    ///
-    /// FX29 - Set address of font character saved in VX to Index register I
-    case SetFontCharacterAddressToIndexRegister(registerIndex: Int)
-    /// Add value of VX to index register I
-    ///
-    /// FX15 - add value of VX to index register I, NOTE: carry flag is not changed
-    case AddRegisterValueToIndexRegister(registerIndex: Int)
-    
-    /// Storing values from registers (from register0 til and including registerX) into memory addresses starting from I, or restoring them.
-    ///
-    /// FX55 - Store registers up to index X in memory addresses starting from the one stored in I
-    /// 
-    /// FX65 - Restore registers up to index X from memory addresses starting from the one stored in I
-    case RegistersStorage(maxIncludedRegisterIndex: Int, isRestoring: Bool)
-    /// Store decimal digits of VX value (UByte in decimal format so 000 - 255) in memory addresses starting from the one stored in register I.
-    /// Leftmost digits is saved to address I, second one is saved at I+1 and third digit is saved at I+2
-    ///
-    /// FX33 - Store decimal digits of VX value (in decimal format 000 - 255) in memory addresses starting from the one stored in I
-    case RegisterStoreDecimalDigits(registerXIndex: Int)
-    
-    /// Store value of delay timer into registerX
-    ///
-    /// FX07 sets VX to the current value of the delay timer
-    case DelayTimerStore(registerIndex: Int)
-    /// Set value of VX to delay timer
-    ///
-    /// FX15 sets the delay timer to the value in VX
-    case DelayTimerSet(registerIndex: Int)
-    /// Set value of VX to sound timer
-    ///
-    /// FX18 sets the sound timer to the value in VX
-    case SoundTimerSet(registerIndex: Int)
-    
-    /// Draw sprite that  has given height at screen location pX = value in register with index X, pY= value in register with index Y. Sprite is fetched from memory starting at address stored in index register I. 
-    /// One pixel is one bit so sprite width is always 8 pixels, hence one pixel row fits into one memory address. Sprite is saved in memory addresses I..<I+height. Height is 4 bit value 0..F.
-    /// If any pixel is turned off after this, indicating collision, then value of register 15 (VF) is set to 1.
-    ///
-    /// DXYN - draws N pixels tall sprite from memory location that Index register has onto screen at location pX = value of X register, pY= value of Y register
-    case DrawSprite(height: Int, registerXIndex: Int, registerYIndex: Int)
+/// Protocol for Chip8 Operation Commands. Each command executes its changes on Chip8SystemState registers and memory.
+///
+///  Note that all commands <b>besides skip and jump/subroutine</b> ones also update the PC+=2
+public protocol Chip8OperationCommand: Equatable {
+    func execute(state: inout Chip8SystemState)
 }
 
-public enum RegistersOperation {
+/// Clears the screen by setting all pixels to 0.
+///
+/// 0x00E0
+public struct ClearScreen: Chip8OperationCommand {
+    public init() {}
+
+    public func execute(state: inout Chip8SystemState) {
+        state.output = Array(repeating: false, count: 64*32)
+        state.pc += 2
+    }
+}
+
+/// Calls the subroutine at the given address. First, value of PC + 2 (address of next instruction) will be saved into call stack. Then PC will be set to address in arguments.
+///
+/// 2NNN - call subroutine at NNN
+public struct CallSubroutine: Chip8OperationCommand {
+    public let address: UShort
+
+    public init(address: UShort) {
+        self.address = address
+    }
+
+    public func execute(state: inout Chip8SystemState) {
+        state.callStack[state.callStackPointer.toInt] = state.pc + 2
+        state.callStackPointer += 1
+        state.pc = address
+    }
+}
+
+/// Returns from the subroutine by setting the PC to address removed from top of call stack (pop action).
+///
+/// 00EE - return from subroutine
+public struct ReturnFromSubroutine: Chip8OperationCommand {
+    public init() {}
+
+    public func execute(state: inout Chip8SystemState) {
+        state.callStackPointer -= 1
+        state.pc = state.callStack[state.callStackPointer.toInt]
+        state.callStack[state.callStackPointer.toInt] = 0
+    }
+}
+
+/// Jump to address by setting PC to it.
+///
+/// 1NNN - jump (set PC to NNN)
+public struct JumpToAddress: Chip8OperationCommand {
+    public let address: UShort
+
+    public init(address: UShort) {
+        self.address = address
+    }
+
+    public func execute(state: inout Chip8SystemState) {
+        state.pc = address
+    }
+}
+
+/// Jump to (address + register0) by setting PC to it.
+///
+/// BNNN - jump (set PC to NNN+V0) Note: V0 is register at the index 0
+public struct JumpToAddressPlusV0: Chip8OperationCommand {
+    public let address: UShort
+
+    public init(address: UShort) {
+        self.address = address
+    }
+
+    public func execute(state: inout Chip8SystemState) {
+        state.pc = address &+ UShort(state.registers[0])
+    }
+}
+
+/// Conditional skip next instruction on comparing register (at the index X) to the value. if condition is met then we will move PC by 4 memory location instead of 2 (current instruction takes 2 memory locations).
+///
+/// 3XNN - Skip next instruction if VX == NN
+///
+/// 4XNN - Skip next instruction if VX != NN
+public struct ConditionalSkipRegisterValue: Chip8OperationCommand {
+    public let registerIndex: Int
+    public let value: UByte
+    public let isEqual: Bool
+
+    public init(registerIndex: Int, value: UByte, isEqual: Bool) {
+        self.registerIndex = registerIndex
+        self.value = value
+        self.isEqual = isEqual
+    }
+
+    public func execute(state: inout Chip8SystemState) {
+        let registerValue = state.registers[registerIndex]
+        if isEqual && registerValue == value || !isEqual && registerValue != value {
+            state.pc += 4
+        } else {
+            state.pc += 2
+        }
+    }
+}
+
+/// Conditional skip next instruction on comparing VX to VY. If condition is met then we will move PC by 4 memory location instead of 2 (current instruction takes 2 memory locations).
+///
+/// 5XY0 - Skip next instruction if VX == VY
+///
+/// 9XY0 - Skip next instruction if VX != VY
+public struct ConditionalSkipRegisters: Chip8OperationCommand {
+    public let registerXIndex: Int
+    public let registerYIndex: Int
+    public let isEqual: Bool
+
+    public init(registerXIndex: Int, registerYIndex: Int, isEqual: Bool) {
+        self.registerXIndex = registerXIndex
+        self.registerYIndex = registerYIndex
+        self.isEqual = isEqual
+    }
+
+    public func execute(state: inout Chip8SystemState) {
+        let registerXValue = state.registers[registerXIndex]
+        let registerYValue = state.registers[registerYIndex]
+        if isEqual && registerXValue == registerYValue || !isEqual && registerXValue != registerYValue {
+            state.pc += 4
+        } else {
+            state.pc += 2
+        }
+    }
+}
+
+/// Conditional skip next instruction if key stored in VX is pressed down or not. If condition is met then we will move PC by 4 memory location instead of 2 (current instruction takes 2 memory locations).
+///
+/// EX9E - Skip next instruction if key stored in VX is pressed down
+///
+/// EXA1 - Skip next instruction if key stored in VX is not pressed down
+public struct ConditionalSkipKeyDown: Chip8OperationCommand {
+    public let registerIndex: Int
+    public let isKeyDown: Bool
+
+    public init(registerIndex: Int, isKeyDown: Bool) {
+        self.registerIndex = registerIndex
+        self.isKeyDown = isKeyDown
+    }
+
+    public func execute(state: inout Chip8SystemState) {
+        let registerValue = state.registers[registerIndex]
+        let keyIndex = registerValue;
+        state.requiredKeysHelper.insert(keyIndex);
+        
+        let keyState = state.inputKeys[keyIndex.toInt]
+        if isKeyDown && keyState || !isKeyDown && !keyState {
+            state.pc += 4
+        } else {
+            state.pc += 2
+        }
+    }
+}
+
+/// Conditional wait for any key to be pressed down and released to store it in VX and move to next instruction. If key is pressed (down and released) then increase PC by 2 as always, otherwise don't change PC and remain at current command..
+///
+/// FX0A - Wait until key tap (press and release)  and  store it in VX
+public struct ConditionalPauseUntilKeyTap: Chip8OperationCommand {
+    public let registerIndex: Int
+
+    public init(registerIndex: Int) {
+        self.registerIndex = registerIndex
+    }
+
+    public func execute(state: inout Chip8SystemState) {
+        if let keyIndexToBeReleased = state.inputKeyIndexToBeReleased {
+            if state.inputKeys[keyIndexToBeReleased.toInt] == false {
+                state.registers[registerIndex] = keyIndexToBeReleased // save index of pressed and released key into VX
+                state.inputKeyIndexToBeReleased = nil // reset key to be released TODO: HMMM
+                state.pc += 2
+            }
+        } else {
+            let keyPressedDown = state.inputKeys.enumerated().first { (index, value) in
+                value == true
+            }
+            
+            if let keyPressedDown = keyPressedDown {
+                state.requiredKeysHelper.insert(UByte(keyPressedDown.0));
+                state.inputKeyIndexToBeReleased = UByte(keyPressedDown.0) // save index of pressed key and wait for it to be released
+            }
+        }
+    }
+}
+
+/// Set value to register
+///
+/// 6XNN - set value NN to register X
+public struct SetValueToRegister: Chip8OperationCommand {
+    public let registerIndex: Int
+    public let value: UByte
+
+    public init(registerIndex: Int, value: UByte) {
+        self.registerIndex = registerIndex
+        self.value = value
+    }
+
+    public func execute(state: inout Chip8SystemState) {
+        state.registers[registerIndex] = value
+        state.pc += 2
+    }
+}
+
+/// Set value to register without carry flag change
+///
+/// 7XNN - add value NN to register X, NOTE: carry flag is not changed
+public struct AddValueToRegister: Chip8OperationCommand {
+    public let registerIndex: Int
+    public let value: UByte
+
+    public init(registerIndex: Int, value: UByte) {
+        self.registerIndex = registerIndex
+        self.value = value
+    }
+
+    public func execute(state: inout Chip8SystemState) {
+        state.registers[registerIndex] = state.registers[registerIndex] &+ (value) // overflow ignored here
+        state.pc += 2
+    }
+}
+
+/// Set value to Index register I
+///
+/// ANNN - set value NNN to Index register
+public struct SetValueToIndexRegister: Chip8OperationCommand {
+    public let value: UShort
+
+    public init(value: UShort) {
+        self.value = value
+    }
+
+    public func execute(state: inout Chip8SystemState) {
+        state.indexRegister = value
+        state.pc += 2
+    }
+}
+
+/// Set (value & randomByte) to register
+///
+/// CXNN - set value (NN & Random) to register X
+public struct SetValueToRegisterWithRandomness: Chip8OperationCommand {
+    public let registerIndex: Int
+    public let value: UByte
+
+    public init(registerIndex: Int, value: UByte) {
+        self.registerIndex = registerIndex
+        self.value = value
+    }
+
+    public func execute(state: inout Chip8SystemState) {
+        let randomValue = UByte.random(in: UByte.min...UByte.max)
+        state.registers[registerIndex] = value & randomValue
+        state.pc += 2
+    }
+}
+
+/// Operations done on values from register X and Y and saved to register X
+///
+/// 8XY0 - Set VX into VY
+///
+/// 8XY1 - Set VX into VX | VY
+///
+/// 8XY2 - Set VX into VX & VY
+///
+/// 8XY3 - Set VX into VX ^ VY
+///
+/// 8XY4 - Set VX into VX + VY
+///
+/// 8XY5 - Set VX into VX - VY
+///
+/// 8XY7 - Set VX into VY - VX
+///
+/// 8XY6 - Set VX into VX >> 1
+///
+/// 8XYE - Set VX into VX << 1
+public struct RegistersOperation: Chip8OperationCommand {
+    public let registerXIndex: Int
+    public let registerYIndex: Int
+    public let registerOperationType: RegistersOperationType
+
+    public init(registerXIndex: Int, registerYIndex: Int, operation: RegistersOperationType) {
+        self.registerXIndex = registerXIndex
+        self.registerYIndex = registerYIndex
+        self.registerOperationType = operation
+    }
+
+    public func execute(state: inout Chip8SystemState) {
+        switch registerOperationType {
+        case .setToSecond:
+            state.registers[registerXIndex] = state.registers[registerYIndex]
+        case .bitwiseOr:
+            state.registers[registerXIndex] = state.registers[registerXIndex] | state.registers[registerYIndex]
+        case .bitwiseAnd:
+            state.registers[registerXIndex] = state.registers[registerXIndex] & state.registers[registerYIndex]
+        case .bitwiseXOR:
+            state.registers[registerXIndex] = state.registers[registerXIndex] ^ state.registers[registerYIndex]
+        case .addition:
+            let res = state.registers[registerXIndex].addingReportingOverflow(state.registers[registerYIndex])
+            state.registers[registerXIndex]  = res.partialValue
+            state.registers[15] = res.overflow ? 1 : 0
+        case .subtractSecondFromFirst:
+            let res = state.registers[registerXIndex].subtractingReportingOverflow(state.registers[registerYIndex])
+            state.registers[registerXIndex]  = res.partialValue
+            state.registers[15] = res.overflow ? 0 : 1
+        case .subtractFirstFromSecond:
+            let res = state.registers[registerYIndex].subtractingReportingOverflow(state.registers[registerXIndex])
+            state.registers[registerXIndex]  = res.partialValue
+            state.registers[15] = res.overflow ? 0 : 1
+        case .shiftRight:
+            let res = state.registers[registerXIndex] >> 1
+            let overflow = 0x01 & state.registers[registerXIndex]
+            state.registers[registerXIndex]  = res
+            state.registers[15] = overflow
+        case .shiftLeft:
+            let res = state.registers[registerXIndex] << 1
+            let overflow = (0x80 & state.registers[registerXIndex]) >> 7
+            state.registers[registerXIndex]  = res
+            state.registers[15] = overflow
+        }
+        
+        state.pc += 2
+    }
+}
+
+/// Set address of font character saved in VX to Index register I
+///
+/// FX29 - Set address of font character saved in VX to Index register I
+public struct SetFontCharacterAddressToIndexRegister: Chip8OperationCommand {
+    public let registerIndex: Int
+
+    public init(registerIndex: Int) {
+        self.registerIndex = registerIndex
+    }
+
+    public func execute(state: inout Chip8SystemState) {
+        let fontCharacterIndex = state.registers[registerIndex]
+        // single font character uses 5 bytes of memory
+        let fontCharacterAddress = state.fontStartingLocation + UShort(fontCharacterIndex * 5)
+        state.indexRegister = fontCharacterAddress
+        state.pc += 2
+    }
+}
+
+/// Add value of VX to index register I
+///
+/// FX15 - add value of VX to index register I, NOTE: carry flag is not changed
+public struct AddRegisterValueToIndexRegister: Chip8OperationCommand {
+    public let registerIndex: Int
+
+    public init(registerIndex: Int) {
+        self.registerIndex = registerIndex
+    }
+
+    public func execute(state: inout Chip8SystemState) {
+        let registerValue = state.registers[registerIndex]
+        state.indexRegister = state.indexRegister &+ (UShort(registerValue)) // overflow ignored here
+        state.pc += 2
+    }
+}
+
+/// Storing values from registers (from register0 til and including registerX) into memory addresses starting from I, or restoring them.
+///
+/// FX55 - Store registers up to index X in memory addresses starting from the one stored in I
+///
+/// FX65 - Restore registers up to index X from memory addresses starting from the one stored in I
+public struct RegistersStorage: Chip8OperationCommand {
+    public let maxIncludedRegisterIndex: Int
+    public let isRestoring: Bool
+
+    public init(maxIncludedRegisterIndex: Int, isRestoring: Bool) {
+        self.maxIncludedRegisterIndex = maxIncludedRegisterIndex
+        self.isRestoring = isRestoring
+    }
+
+    public func execute(state: inout Chip8SystemState) {
+        var address = Int(state.indexRegister);
+        for i in 0...maxIncludedRegisterIndex {
+            if isRestoring {
+                state.registers[i] = state.randomAccessMemory[address]
+            }else{
+                state.randomAccessMemory[address] = state.registers[i]
+            }
+            address += 1
+        }
+        state.pc += 2
+    }
+}
+
+/// Store decimal digits of VX value (UByte in decimal format so 000 - 255) in memory addresses starting from the one stored in register I.
+/// Leftmost digits is saved to address I, second one is saved at I+1 and third digit is saved at I+2
+///
+/// FX33 - Store decimal digits of VX value (in decimal format 000 - 255) in memory addresses starting from the one stored in I
+public struct RegisterStoreDecimalDigits: Chip8OperationCommand {
+    public let registerXIndex: Int
+
+    public init(registerXIndex: Int) {
+        self.registerXIndex = registerXIndex
+    }
+
+    public func execute(state: inout Chip8SystemState) {
+        let decimalValue = Int(state.registers[registerXIndex])
+        let thirdDecimalDigit = decimalValue % 10
+        let secondDecimalDigit = ((decimalValue - thirdDecimalDigit) / 10) % 10
+        let firstDecimalDigit = (decimalValue - secondDecimalDigit * 10 - thirdDecimalDigit) / 100
+        
+        state.randomAccessMemory[state.indexRegister.toInt] = UByte(firstDecimalDigit)
+        state.randomAccessMemory[state.indexRegister.toInt + 1] = UByte(secondDecimalDigit)
+        state.randomAccessMemory[state.indexRegister.toInt + 2] = UByte(thirdDecimalDigit)
+
+        state.pc += 2
+    }
+}
+
+    
+/// Store value of delay timer into registerX
+///
+/// FX07 sets VX to the current value of the delay timer
+public struct DelayTimerStore: Chip8OperationCommand {
+    public let registerIndex: Int
+
+    public init(registerIndex: Int) {
+        self.registerIndex = registerIndex
+    }
+
+    public func execute(state: inout Chip8SystemState) {
+        state.registers[registerIndex] = state.delayTimer
+        state.pc += 2
+    }
+}
+
+/// Set value of VX to delay timer
+///
+/// FX15 sets the delay timer to the value in VX
+public struct DelayTimerSet: Chip8OperationCommand {
+    public let registerIndex: Int
+
+    public init(registerIndex: Int) {
+        self.registerIndex = registerIndex
+    }
+
+    public func execute(state: inout Chip8SystemState) {
+        state.delayTimer = state.registers[registerIndex]
+        state.pc += 2
+    }
+}
+
+/// Set value of VX to sound timer
+///
+/// FX18 sets the sound timer to the value in VX
+public struct SoundTimerSet: Chip8OperationCommand {
+    public let registerIndex: Int
+
+    public init(registerIndex: Int) {
+        self.registerIndex = registerIndex
+    }
+
+    public func execute(state: inout Chip8SystemState) {
+        state.soundTimer = state.registers[registerIndex]
+        state.pc += 2
+    }
+}
+
+/// Draw sprite that  has given height at screen location pX = value in register with index X, pY= value in register with index Y. Sprite is fetched from memory starting at address stored in index register I.
+/// One pixel is one bit so sprite width is always 8 pixels, hence one pixel row fits into one memory address. Sprite is saved in memory addresses I..<I+height. Height is 4 bit value 0..F.
+/// If any pixel is turned off after this, indicating collision, then value of register 15 (VF) is set to 1.
+///
+/// DXYN - draws N pixels tall sprite from memory location that Index register has onto screen at location pX = value of X register, pY= value of Y register
+public struct DrawSprite: Chip8OperationCommand {
+    public let height: Int
+    public let registerXIndex: Int
+    public let registerYIndex: Int
+
+    public init(height: Int, registerXIndex: Int, registerYIndex: Int) {
+        self.height = height
+        self.registerXIndex = registerXIndex
+        self.registerYIndex = registerYIndex
+    }
+
+    public func execute(state: inout Chip8SystemState) {
+        let locationX = Int(state.registers[registerXIndex])
+        let locationY = Int(state.registers[registerYIndex])
+        
+        state.registers[15] = 0 // collision
+        
+        let spriteStartAddress = Int(state.indexRegister)
+        let spriteEndAddress = spriteStartAddress + height // Chip8 Spite is always 8 pixels (8 bits in memory) wide. One memory address stores one row of sprite. So whole sprite is <height> bytes long
+        let sprite = Array(state.randomAccessMemory[spriteStartAddress..<spriteEndAddress])
+        for i in 0..<height { // row by row
+            if locationY+i >= 32 {
+                break
+            }
+            for j in 0..<8 { // column by column (pixels in one row)
+                if locationX+j >= 64 {
+                    break
+                }
+                if locationX+j + (locationY+i)*64 >= state.output.count {
+                    continue
+                }
+                let pixelBefore = state.output[locationX+j + (locationY+i)*64]
+                let spritePixel = Bool.fromOneOrZero((sprite[i] & UInt8(NSDecimalNumber(decimal: pow(2, (7-j))).intValue)) >> (7-j))
+                let pixel = spritePixel == false ? pixelBefore : pixelBefore.xor(other: spritePixel)
+                state.output[locationX+j + (locationY+i)*64] = pixel
+                if (pixel != pixelBefore && pixelBefore == true) {
+                    state.registers[15] = 1 // collision
+                }
+            }
+        }
+        state.pc += 2
+    }
+}
+
+/// Unknown operation whose code could not have been parsed
+public struct Unknown: Chip8OperationCommand {
+    public let operationCode: UShort
+
+    public init(operationCode: UShort) {
+        self.operationCode = operationCode
+    }
+
+    public func execute(state: inout Chip8SystemState) {
+    }
+}
+
+public enum RegistersOperationType {
     case setToSecond
     case bitwiseOr
     case bitwiseAnd
@@ -148,3 +547,5 @@ public enum RegistersOperation {
     case shiftRight
     case shiftLeft
 }
+
+
