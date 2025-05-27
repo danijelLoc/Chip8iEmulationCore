@@ -8,7 +8,7 @@
 import Foundation
 
 /// State of the emulated Chip8 system, including RAM, Registers, Call Stack, Timers, Program Counter, Input Keys States and Output Screen Buffer.
-public struct Chip8SystemState: Codable, Equatable {
+public struct Chip8SystemState: Codable, Equatable, Sendable {
     /// 4096 Bytes of memory. Chip8 uses BIG ENDIAN (when saving UShort value  we save upper byte at address x and then lower byte at memory address x+1). Whole program ROM is loaded into the RAM at starting PC address of 0x200.
     public var randomAccessMemory: [UByte]
     

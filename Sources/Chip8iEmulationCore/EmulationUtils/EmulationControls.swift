@@ -23,7 +23,7 @@ public extension Dictionary where Value: Equatable {
 /// 7 8 9 E
 /// A 0 B F
 /// ```
-public enum Chip8Key: UByte, CaseIterable, Equatable {
+public enum Chip8Key: UByte, CaseIterable, Equatable, Sendable {
     case Zero = 0x0
     case One = 0x1
     case Two = 0x2
