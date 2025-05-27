@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "2A5D8C2B-C80A-4857-B1D6-05D3474BA3E4",
+      "name" : "Configuration 1",
+      "options" : {
+        "threadSanitizerEnabled" : true
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "Chip8iEmulationCoreTests",
+        "name" : "Chip8iEmulationCoreTests"
+      }
+    }
+  ],
+  "version" : 1
+}

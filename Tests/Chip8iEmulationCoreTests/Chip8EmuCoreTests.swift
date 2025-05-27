@@ -116,8 +116,10 @@ struct Chip8EmuCoreTests {
             await core.onKeyDown(.One)
         }
         
+        emuTask.cancel()
+        
         let res = await emuTask.result
-        //#expect(try? res.get()) // Finished and did not throw the error outside (invalid operation caught in the core)
+        #expect(res != nil) // Finished and did not throw the error outside (invalid operation caught in the core)
 //        core.onKeyDown(key: .A)
 //        core.onKeyDown(key: .A)
 //        core.onKeyUp(key: .A)

@@ -14,6 +14,7 @@ The emulation core package can be used in frontend apps on macOS and iOS where y
 - `Debug` info publishing
 - `Pause` and `Resume` emulation
 - `Save` and `Load` emulation states during gameplay
+- `Logging` with custom log levels and handlers
 
 ## Installation
 
