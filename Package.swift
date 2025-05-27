@@ -12,6 +12,9 @@ let package = Package(
             name: "Chip8iEmulationCore",
             targets: ["Chip8iEmulationCore"]),
     ],
+    dependencies: [
+        .package(url: "https://github.com/apple/swift-testing", from: "6.1.1"),
+    ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
@@ -19,6 +22,6 @@ let package = Package(
             name: "Chip8iEmulationCore"),
         .testTarget(
             name: "Chip8iEmulationCoreTests",
-            dependencies: ["Chip8iEmulationCore"]),
+            dependencies: ["Chip8iEmulationCore", .product(name: "Testing", package: "swift-testing")]),
     ]
 )
