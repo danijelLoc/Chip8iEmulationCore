@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol Chip8OperationParserProtocol {
+public protocol Chip8OperationParserProtocol: Sendable {
 //    /// Decode machine operation code (UShort) into Chip8Operation with its parameters.
 //    func decode(_ operationCode: UShort) -> Chip8Operation;
 //    /// Encode back Chip8Operation enum into machine operation code (UShort)

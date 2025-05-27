@@ -12,6 +12,7 @@ import Combine
 /// Emulation Core that should be used for starting emulation, sending inputs and subscribing to its screen and sound output. It also includes optional debug output info for advanced users.
 /// This is a ViewModel that creates execution loop and communicates with internal Chip8 program operations processing modules.
 public class Chip8EmulationCore: Chip8EmulationCoreProtocol {
+    
     /// Internal Chip8 System/CPU that executes the commands
     private var system: Chip8System
     /// Internal Sound Handler
@@ -41,7 +42,7 @@ public class Chip8EmulationCore: Chip8EmulationCoreProtocol {
     /// When value  is 0 any playing sound should be stoped.
     @Published internal fileprivate(set) var outputSoundTimer: UByte = 0
     /// Debug Info about current Chip8 System State
-    @Published internal fileprivate(set) var debugSystemState: Chip8SystemState
+    @Published internal fileprivate(set) var debugSystemState: Chip8SystemState?
     /// Debug Info about encountered error
     @Published internal fileprivate(set) var debugErrorInfo: Error?
     /// Info about play status
@@ -60,7 +61,7 @@ public class Chip8EmulationCore: Chip8EmulationCoreProtocol {
         
         let system = Chip8System(parser: parser, logger: logger)
         self.system = system
-        self.debugSystemState = system.state
+        self.debugSystemState = nil
         self.debugErrorInfo = nil
         
         $outputSoundTimer.removeDuplicates().sink { newValue in
@@ -82,8 +83,8 @@ public class Chip8EmulationCore: Chip8EmulationCoreProtocol {
             self.hasEmulationStarted = true
             self.isPlaying = true
 
-            system.loadFont()
-            system.loadProgram(program.contentROM)
+            await system.loadFont()
+            await system.loadProgram(program.contentROM)
 
             emulationTask = Task.detached(priority: .userInitiated) {
                 try await self.emulationLoop(program: program)
@@ -115,7 +116,7 @@ public class Chip8EmulationCore: Chip8EmulationCoreProtocol {
             for _ in 0..<systemCpuInstructionsCountPerFrame {
                 if Task.isCancelled { return }
 
-                try system.emulateSingleCycle()
+                try await system.emulateSingleCycle()
                 await publishDebugInfo()
             }
             
@@ -128,76 +129,82 @@ public class Chip8EmulationCore: Chip8EmulationCoreProtocol {
             }
 
             // Decrement timers every 1 / 60 seconds.
-            system.decreaseDelayTimer()
-            system.decreaseSoundTimer()
+            await system.decreaseDelayTimer()
+            await system.decreaseSoundTimer()
 
             await publishSoundAndScreenOutput()
         }
     }
 
     public func onKeyDown(_ key: Chip8Key) {
-        system.keyDown(key: key.rawValue)
+        Task {
+            await system.keyDown(key: key.rawValue)
+        }
+
     }
 
     public func onKeyUp(_ key: Chip8Key) {
-        system.keyUp(key: key.rawValue)
-    }
-
-    public func togglePause() async {
-        isPlaying = !isPlaying
-        await publishDebugInfo()
-    }
-
-    public func loadState(_ newState: EmulationState) {
-        if program?.contentHash == newState.programContentHash {
-            system.loadState(newState.systemState)
+        Task {
+            await system.keyUp(key: key.rawValue)
         }
     }
 
-    public func stop() async {
-        isPlaying = false
-        hasEmulationStarted = false
-        emulationTask?.cancel()
-        system.reset()
-        await resetPublishers()
+    public func togglePause() {
+        Task {
+            isPlaying = !isPlaying
+            await publishDebugInfo()
+        }
     }
 
-    public func exportState() -> EmulationState? {
+    public func loadState(_ newState: EmulationState) {
+        Task {
+            if program?.contentHash == newState.programContentHash {
+                await system.loadState(newState.systemState)
+            }
+        }
+    }
+
+    public func stop() {
+        Task {
+            isPlaying = false
+            hasEmulationStarted = false
+            emulationTask?.cancel()
+            await system.reset()
+            await resetPublishers()
+        }
+    }
+
+    public func exportState() async -> EmulationState? {
         guard let program = program else { return nil }
         return EmulationState(
-            programContentHash: program.contentHash, systemState: system.state)
+            programContentHash: program.contentHash, systemState: await system.exportState())
     }
-
-
 }
 
 
 // Publishers extension
 extension Chip8EmulationCore {
     public var outputScreenPublisher: Published<[Bool]>.Publisher { $outputScreen }
-    public var debugSystemStateInfoPublisher: Published<Chip8SystemState>.Publisher { $debugSystemState }
+    public var debugSystemStateInfoPublisher: Published<Chip8SystemState?>.Publisher { $debugSystemState }
     public var debugErrorInfoPublisher: Published<Error?>.Publisher { $debugErrorInfo }
     public var playingInfoPublisher: Published<PlayingInfo>.Publisher { $playingInfo }
     
-    @MainActor
     internal func publishDebugInfo(error: Error? = nil) async {
         playingInfo = PlayingInfo(
             hasStarted: hasEmulationStarted, isPlaying: isPlaying)
-        debugSystemState = system.state
+        debugSystemState = await system.exportState()
         debugErrorInfo = error
     }
 
-    @MainActor
     internal func publishSoundAndScreenOutput() async {
-        outputScreen = system.state.output
-        outputSoundTimer = system.state.soundTimer
+        outputScreen = await system.exportState().output
+        outputSoundTimer = await system.exportState().soundTimer
     }
 
-    @MainActor
     internal func resetPublishers() async {
         outputScreen = Array(repeating: false, count: 64 * 32)
         outputSoundTimer = 0
-        debugSystemState = system.state
+        debugSystemState = await system.exportState()
         debugErrorInfo = nil
         playingInfo = PlayingInfo(hasStarted: false, isPlaying: false)
     }

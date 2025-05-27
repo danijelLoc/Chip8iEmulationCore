@@ -1,33 +1,33 @@
-import XCTest
+import Testing
 @testable import Chip8iEmulationCore
 
-final class Chip8OperationParserTests: XCTestCase {
+struct Chip8OperationParserTests {
     
-    func testParseOpCodes() throws {
+    @Test func testParseOpCodes() throws {
         let parser = Chip8OperationParser();
         
-        XCTAssertEqual(ClearScreen(), parser.decode(0x00E0) as? ClearScreen)
+        #expect(ClearScreen() == parser.decode(0x00E0) as? ClearScreen)
         
-        XCTAssertNotEqual(ClearScreen(), parser.decode(0x00E1) as? ClearScreen)
-        XCTAssertEqual(Unknown(operationCode: 0x00E1), parser.decode(0x00E1) as? Unknown) // 0x00E1 is not a valid op code -> unknown
+        #expect(ClearScreen() != parser.decode(0x00E1) as? ClearScreen)
+        #expect(Unknown(operationCode: 0x00E1) == parser.decode(0x00E1) as? Unknown) // 0x00E1 is not a valid op code -> unknown
         
-        XCTAssertEqual(JumpToAddress(address: 0x222), parser.decode(0x1222) as? JumpToAddress)
-        XCTAssertEqual(JumpToAddressPlusV0(address: 0x222), parser.decode(0xB222) as? JumpToAddressPlusV0)
+        #expect(JumpToAddress(address: 0x222) == parser.decode(0x1222) as? JumpToAddress)
+        #expect(JumpToAddressPlusV0(address: 0x222) == parser.decode(0xB222) as? JumpToAddressPlusV0)
         
-        XCTAssertEqual(ConditionalSkipRegisterValue(registerIndex: 5, value: 0x22, isEqual: true), parser.decode(0x3522) as? ConditionalSkipRegisterValue)
+        #expect(ConditionalSkipRegisterValue(registerIndex: 5, value: 0x22, isEqual: true) == parser.decode(0x3522) as? ConditionalSkipRegisterValue)
         
-        XCTAssertEqual(RegistersOperation(registerXIndex: 1, registerYIndex: 0, operation: .subtractSecondFromFirst), parser.decode(0x8105) as? RegistersOperation)
-        XCTAssertEqual(RegistersOperation(registerXIndex: 1, registerYIndex: 0xA, operation: .subtractFirstFromSecond), parser.decode(0x81A7) as? RegistersOperation)
+        #expect(RegistersOperation(registerXIndex: 1, registerYIndex: 0, operation: .subtractSecondFromFirst) == parser.decode(0x8105) as? RegistersOperation)
+        #expect(RegistersOperation(registerXIndex: 1, registerYIndex: 0xA, operation: .subtractFirstFromSecond) == parser.decode(0x81A7) as? RegistersOperation)
         
-        XCTAssertEqual(RegistersOperation(registerXIndex: 1, registerYIndex: 9, operation: .shiftRight), parser.decode(0x8196) as? RegistersOperation)
-        XCTAssertNotEqual(RegistersOperation(registerXIndex: 1, registerYIndex: 9, operation: .shiftLeft), parser.decode(0x8196) as? RegistersOperation)
+        #expect(RegistersOperation(registerXIndex: 1, registerYIndex: 9, operation: .shiftRight) == parser.decode(0x8196) as? RegistersOperation)
+        #expect(RegistersOperation(registerXIndex: 1, registerYIndex: 9, operation: .shiftLeft) != parser.decode(0x8196) as? RegistersOperation)
         
-        XCTAssertEqual(DrawSprite(height: 8, registerXIndex: 3, registerYIndex: 1), parser.decode(0xD318) as? DrawSprite)
-        XCTAssertEqual(DrawSprite(height: 0xF, registerXIndex: 0xF, registerYIndex: 0xF), parser.decode(0xDFFF) as? DrawSprite)
+        #expect(DrawSprite(height: 8, registerXIndex: 3, registerYIndex: 1) == parser.decode(0xD318) as? DrawSprite)
+        #expect(DrawSprite(height: 0xF, registerXIndex: 0xF, registerYIndex: 0xF) == parser.decode(0xDFFF) as? DrawSprite)
     }
     
     /// Will test decoding machine opcodes and encoding back.
-    func testDecodeEncode() {
+    @Test func testDecodeEncode() {
         let testCases: [(UShort, any Chip8OperationCommand)] = [
             // Test cases for all operations
             (0x00E0, ClearScreen()),
@@ -63,8 +63,8 @@ final class Chip8OperationParserTests: XCTestCase {
             let parser = Chip8OperationParser()
             
             let expectedOperationCode = parser.encode(expectedOperation)
-            XCTAssertEqual(expectedOperationCode, opCode,
-                           "Expected operation code \(expectedOperation) did not match the original machine code \(opCode).")
+            #expect(expectedOperationCode == opCode,
+                    "Expected operation code \(expectedOperation) did not match the original machine code \(opCode).")
             
             let decodedOperation = parser.decode(opCode)
 
@@ -73,7 +73,7 @@ final class Chip8OperationParserTests: XCTestCase {
         
 
             // Ensure the re-encoded machine code matches the original machine code
-            XCTAssertEqual(reEncodedMachineCode, opCode,
+            #expect(reEncodedMachineCode == opCode,
                            "Re-encoded machine code did not match the original machine code for operation \(expectedOperation).")
         }
     }

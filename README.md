@@ -7,6 +7,14 @@
 
 The emulation core package can be used in frontend apps on macOS and iOS where you just have to propagate user input into the core and subscribe to output from it.
 
+## Features
+
+- Simultaneous key `input`
+- `Video` and `Audio` output
+- `Debug` info publishing
+- `Pause` and `Resume` emulation
+- `Save` and `Load` emulation states during gameplay
+
 ## Installation
 
 To include `Chip8iEmulationCore` in your project, add it as a Swift Package Dependency:
