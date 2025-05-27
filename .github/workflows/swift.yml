@@ -1,14 +1,15 @@
 # This workflow will build a Swift project
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-swift
 
-name: Swift
+name: Setup Swift 
 uses: SwiftyLab/setup-swift@latest
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "develop" ]
+
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "develop" ]
 
 jobs:
   build_and_test:
