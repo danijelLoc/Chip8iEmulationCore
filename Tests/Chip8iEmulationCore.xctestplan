@@ -1,15 +1,15 @@
 {
   "configurations" : [
     {
-      "id" : "509EC8F7-47C7-434A-AF91-2013A950B1F4",
-      "name" : "Test Scheme Action",
+      "id" : "2A5D8C2B-C80A-4857-B1D6-05D3474BA3E4",
+      "name" : "Configuration 1",
       "options" : {
-
+        "threadSanitizerEnabled" : true
       }
     }
   ],
   "defaultOptions" : {
-    "threadSanitizerEnabled" : true
+
   },
   "testTargets" : [
     {

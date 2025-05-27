@@ -9,29 +9,15 @@ import Foundation
 
 
 /// Internal Chip8 System CPU module that executes system operation with resulting mutation of system state.
-internal class Chip8System {
+internal actor Chip8System {
 
     private var parser: Chip8OperationParserProtocol
     private var logger: EmulationLoggerProtocol?
     
-    private var _state: Chip8SystemState
-    private let stateLock = NSLock()  // Lock to synchronise access
-    // Thread-safe getter and setter for the state property
-    private(set) var state: Chip8SystemState {
-        get {
-            stateLock.lock()
-            defer { stateLock.unlock() }
-            return _state
-        }
-        set {
-            stateLock.lock()
-            defer { stateLock.unlock() }
-            _state = newValue
-        }
-    }
+    private var state: Chip8SystemState
     
     internal init(parser: Chip8OperationParserProtocol = Chip8OperationParser(), logger: EmulationLoggerProtocol? = .none) {
-        self._state = Chip8SystemState()
+        self.state = Chip8SystemState()
         self.logger = logger
         self.parser = parser
     }
@@ -88,6 +74,10 @@ internal class Chip8System {
     internal func loadState(_ newState: Chip8SystemState) {
         state = newState
         logger?.log("Loaded state", level: .info)
+    }
+    
+    internal func exportState() -> Chip8SystemState {
+        return state
     }
     
     internal func decreaseDelayTimer() {
