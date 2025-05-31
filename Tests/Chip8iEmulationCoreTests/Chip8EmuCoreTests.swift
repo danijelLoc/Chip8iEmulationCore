@@ -1,4 +1,3 @@
-import Combine
 import XCTest
 @testable import Chip8iEmulationCore
 
@@ -37,10 +36,10 @@ final class Chip8EmuCoreTests: XCTestCase {
 //            // print(EmulationConsoleLogger.getStringOutput(value, width: 64, height: 32))
 //        }.store(in: &cb)
         
-        await core.emulate(program)
-        
+        await core.startEmulation(program)
+        try await Task.sleep(nanoseconds: 500_000_000) // 0.5s
         // Cut out selected screen area x10y0 x18y5 where number 7 should have been drawn
-        let selectedArea = await core.outputScreen.getSelectedArea(locationX: 10, locationY: 0, selectedWidth: 8, selectedHeight: 5, totalWidth: 64, totalHeight: 32)
+        let selectedArea = await core.outputScreen.screen.getSelectedArea(locationX: 10, locationY: 0, selectedWidth: 8, selectedHeight: 5, totalWidth: 64, totalHeight: 32)
         let selectedAreaData = selectedArea?.toRowsBytes(totalWidth: 8, totalHeight: 5)
         // Digit 7 font character byte representation
         let fontCharacterStartingAddress: Int = await core.debugSystemState!.fontStartingLocation.toInt + 7 * 5
@@ -61,7 +60,8 @@ final class Chip8EmuCoreTests: XCTestCase {
         ]
         
         var program = Chip8Program(name: "unsupported", contentROM: unsupported)
-        await core.emulate(program)
+        await core.startEmulation(program)
+        try await Task.sleep(nanoseconds: 500_000_000) // 0.5s
         var debugErrorInfo = await core.debugErrorInfo as! EmulationError
         XCTAssertEqual(EmulationError.unknownOpcode(opcode: 0x0), debugErrorInfo) // Error has halted program execution and debug info was sent to observers
         var pc = await core.debugSystemState!.pc
@@ -73,7 +73,8 @@ final class Chip8EmuCoreTests: XCTestCase {
         ]
         
         program = Chip8Program(name: "unsupported", contentROM: unsupported)
-        await core.emulate(program)
+        await core.startEmulation(program)
+        try await Task.sleep(nanoseconds: 500_000_000) // 0.5s
         pc = await core.debugSystemState!.pc
         XCTAssertEqual(0xFFF, pc) // Jump was made and system could not get second part of new opcode
         debugErrorInfo = await core.debugErrorInfo as! EmulationError
@@ -103,26 +104,14 @@ final class Chip8EmuCoreTests: XCTestCase {
 //        core.$outputScreen.sink { value in
 //            // print(EmulationConsoleLogger.getStringOutput(value, width: 64, height: 32))
 //        }.store(in: &cb)
+
+        await core.startEmulation(program)
+        //try await Task.sleep(nanoseconds: 1_000_000_000) // Sleep for 1 second
         
-        let emuTask = Task {
-            await core.emulate(program)
-        }
+        await core.onKeyDown(.One)
         
-        try await Task.sleep(nanoseconds: 1_000_000_000) // Sleep for 1 second
-        XCTAssertEqual(false, emuTask.isCancelled)
+        await core.stop()
         
-        
-        Task { // Simulate calling from the main thread of the frontend app
-            await core.onKeyDown(.One)
-        }
-        
-        emuTask.cancel()
-        
-        let res = await emuTask.result
-        XCTAssertTrue(res != nil) // Finished and did not throw the error outside (invalid operation caught in the core)
-//        core.onKeyDown(key: .A)
-//        core.onKeyDown(key: .A)
-//        core.onKeyUp(key: .A)
         
     }
     

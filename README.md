@@ -44,10 +44,10 @@ let chip8Program = Chip8Program(name: "My Pong Game", contentROM: myPongGameROMD
 
 ### Start emulation
 
-The `emulate` function runs in an infinite loop (Chip8 programs don't have exit command), so ensure that it is run in a proper asynchronous context.
+The `startEmulation` function sets up the emulation core, loads up the program and starts the background task for emulation infinitive loop (Chip8 programs don't have exit command), so ensure that it is run in a proper asynchronous context, even if this function(startEmulation) doesn't wait for background emulation task to end (can end only with invalid chip8 opcode in ROM data or user stopping emulation core).
 ```swift
 Task {
-    await emulationCore.emulate(chip8Program)
+    await emulationCore.startEmulation(chip8Program)
 }
 ```
 
@@ -82,12 +82,13 @@ One way to reactively display screen updates from `outputScreen` publisher buffe
 Here is an example of this approach in macOS frontend app which uses this package. Also included in the example is initialization of core, starting the game and subscribing to sound timer change.
 
 ```swift
+// struct SimpleChip8EmulatorView: View { ... 
+
 var emulationCore = Chip8EmulationCore(soundHandler: PrerecordedSoundHandler(with: "Beep2.wav"), logger: nil)
-@State private var lastFrame: [Bool] = Array(repeating: false, count: 64*32)
 
 var body: some View {
     VStack {
-        Image(CGImage.fromMonochromeBitmap(lastFrame,
+        Image(CGImage.fromMonochromeBitmap(emulationCore.outputScreen.screen,
           width: 64, height: 32)!,
         scale: 5, label: Text("Output"))
             .interpolation(.none)
@@ -98,12 +99,9 @@ var body: some View {
     .onAppear(perform: {
         Task {
             guard let program = loadGameFromBundle(gameName: "Pong.ch8") else { return }
-            await emulationCore.emulate(program)
+            await emulationCore.startEmulation(program)
         }
     })
-    .onReceive(emulationCore.outputScreenPublisher) { frame in
-        self.lastFrame = frame
-    }
 }
 
 private func loadGameFromBundle(gameName: String) -> Chip8Program? {
@@ -112,15 +110,14 @@ private func loadGameFromBundle(gameName: String) -> Chip8Program? {
     let romData = data.compactMap { $0 }
     return Chip8Program(name: gameName, contentROM: romData)
 }
+
+// ... }
 ```
 
 ### Keyboard input example for macOS
 
-This is the code needed for macOS input propagation to the core.
-
+This is the code needed for macOS input propagation to the core. Add it to existing code above.
 ```swift
-// ... 
-
 var body: some View {
     VStack {
         // ...
@@ -133,14 +130,19 @@ var body: some View {
 }
 
 private func onKeyDown(key: KeyPress) -> KeyPress.Result {
-    guard let chip8Key = Chip8Key.StandardKeyboardBinding[key.key.character] else { return .ignored }
-    emulationCore.onKeyDown(chip8Key)
-    return .handled
+    if let chip8Key = Chip8Key.StandardKeyboardBinding[key.key.character] {
+        Task { await emulationCore.onKeyDown(chip8Key) }
+        return .handled
+    }
+    else { return .ignored }
 }
 
 private func onKeyUp(key: KeyPress) -> KeyPress.Result {
-    guard let chip8Key = Chip8Key.StandardKeyboardBinding[key.key.character] else { return .ignored }
-    emulationCore.onKeyUp(chip8Key)
+    if let chip8Key = Chip8Key.StandardKeyboardBinding[key.key.character] { Task { await emulationCore.onKeyUp(chip8Key) } }
+    else if key.key == .space { Task { await emulationCore.togglePause() } }
+    else if key.key == .escape { Task { await emulationCore.stop() } }
+    else { return .ignored }
+    
     return .handled
 }
 ```
@@ -151,8 +153,7 @@ To use sound you need to pass implementation of SoundHandlerProtocol to the Chip
 Existing tested implementation is PrerecordedSoundHandler which requires existing short sound file (1 second beep sound is optimal).
 ```swift
 // Example where sound file was in Swift frontend project resources and passed to the core
-let soundHandler = PrerecordedSoundHandler(with: "Beep2.wav") 
-let emulationCore = Chip8EmulationCore(soundHandler: soundHandler)
+let emulationCore = Chip8EmulationCore(soundHandler: PrerecordedSoundHandler(with: "Beep2.wav"))
 ```
 
 ### Emulation status update with pausing and exiting
