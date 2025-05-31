@@ -1,11 +1,10 @@
 import XCTest
-import Combine
 @testable import Chip8iEmulationCore
 
 final class Chip8EmuCoreTests: XCTestCase {
     
     func testEmulationAndOutputPublishing() async throws {
-        let core = Chip8EmulationCore(logger: .none);
+        let core = await Chip8EmulationCore(logger: .none);
         let draw007: [UByte] = [
             0x00, 0xE0, // Clear the screen
             0x60, 0x00, // Set V0 to 0 (starting x position for 0)
@@ -37,33 +36,36 @@ final class Chip8EmuCoreTests: XCTestCase {
 //            // print(EmulationConsoleLogger.getStringOutput(value, width: 64, height: 32))
 //        }.store(in: &cb)
         
-        await core.emulate(program)
-        
+        await core.startEmulation(program)
+        try await Task.sleep(nanoseconds: 500_000_000) // 0.5s
         // Cut out selected screen area x10y0 x18y5 where number 7 should have been drawn
-        let selectedArea = core.outputScreen.getSelectedArea(locationX: 10, locationY: 0, selectedWidth: 8, selectedHeight: 5, totalWidth: 64, totalHeight: 32)
+        let selectedArea = await core.outputScreen.screen.getSelectedArea(locationX: 10, locationY: 0, selectedWidth: 8, selectedHeight: 5, totalWidth: 64, totalHeight: 32)
         let selectedAreaData = selectedArea?.toRowsBytes(totalWidth: 8, totalHeight: 5)
         // Digit 7 font character byte representation
-        let fontCharacterStartingAddress: Int = core.debugSystemState.fontStartingLocation.toInt + 7 * 5
-        let fontCharacterData = Array(core.debugSystemState.randomAccessMemory[fontCharacterStartingAddress..<fontCharacterStartingAddress+5])
+        let fontCharacterStartingAddress: Int = await core.debugSystemState!.fontStartingLocation.toInt + 7 * 5
+        let fontCharacterData = await Array(core.debugSystemState!.randomAccessMemory[fontCharacterStartingAddress..<fontCharacterStartingAddress+5])
         
         XCTAssertEqual(fontCharacterData, selectedAreaData) // Font character 7 is drawn on the screen
-        XCTAssertEqual(0, core.debugSystemState.registers[0xF]) // No collision was detected
+        let debugSystemState = await core.debugSystemState!
+        XCTAssertEqual(0, debugSystemState.registers[0xF]) // No collision was detected
         // print(EmulationConsoleLogger.getStringOutput(core.outputScreen, width: 64, height: 32)) // Show final output screen state in terminal
-        
-        XCTAssertEqual(EmulationError.unknownOpcode(opcode: 0x0), core.debugErrorInfo as! EmulationError) // Error has halted program execution and debug info was sent to observers
+        let debugErrorInfo = await core.debugErrorInfo as! EmulationError
+        XCTAssertEqual(EmulationError.unknownOpcode(opcode: 0x0), debugErrorInfo ) // Error has halted program execution and debug info was sent to observers
     }
     
     func testErrorHandling() async throws {
-        let core = Chip8EmulationCore(soundHandler: nil, logger: .none);
+        let core = await Chip8EmulationCore(soundHandler: nil, logger: .none);
         var unsupported: [UByte] = [
             0x00, 0x00 // Unsupported operation
         ]
         
         var program = Chip8Program(name: "unsupported", contentROM: unsupported)
-        await core.emulate(program)
-        
-        XCTAssertEqual(EmulationError.unknownOpcode(opcode: 0x0), core.debugErrorInfo as! EmulationError) // Error has halted program execution and debug info was sent to observers
-        XCTAssertEqual(0x200, core.debugSystemState.pc) // Execution was halted immediately because of unknown operation code at 0x200 so PC is not changed
+        await core.startEmulation(program)
+        try await Task.sleep(nanoseconds: 500_000_000) // 0.5s
+        var debugErrorInfo = await core.debugErrorInfo as! EmulationError
+        XCTAssertEqual(EmulationError.unknownOpcode(opcode: 0x0), debugErrorInfo) // Error has halted program execution and debug info was sent to observers
+        var pc = await core.debugSystemState!.pc
+        XCTAssertEqual(0x200, pc) // Execution was halted immediately because of unknown operation code at 0x200 so PC is not changed
         
         unsupported = [
             0x60, 0x00, // Set V0 to 0 (starting x position for 0) - regular operation
@@ -71,14 +73,16 @@ final class Chip8EmuCoreTests: XCTestCase {
         ]
         
         program = Chip8Program(name: "unsupported", contentROM: unsupported)
-        await core.emulate(program)
-        
-        XCTAssertEqual(0xFFF, core.debugSystemState.pc) // Jump was made and system could not get second part of new opcode
-        XCTAssertEqual(EmulationError.opcodeFetchError(address: 0xFFF), core.debugErrorInfo as! EmulationError) // Error has halted program execution and debug info was sent to observers
+        await core.startEmulation(program)
+        try await Task.sleep(nanoseconds: 500_000_000) // 0.5s
+        pc = await core.debugSystemState!.pc
+        XCTAssertEqual(0xFFF, pc) // Jump was made and system could not get second part of new opcode
+        debugErrorInfo = await core.debugErrorInfo as! EmulationError
+        XCTAssertEqual(EmulationError.opcodeFetchError(address: 0xFFF), debugErrorInfo) // Error has halted program execution and debug info was sent to observers
     }
     
     func testInput() async throws {
-        let core = Chip8EmulationCore(logger: .none);
+        let core = await Chip8EmulationCore(logger: .none);
         let waitForKey: [UByte] = [
             0x00, 0xE0, // Clear the screen
             0x60, 0x00, // Set V0 to 0 (starting x position for 0)
@@ -100,24 +104,14 @@ final class Chip8EmuCoreTests: XCTestCase {
 //        core.$outputScreen.sink { value in
 //            // print(EmulationConsoleLogger.getStringOutput(value, width: 64, height: 32))
 //        }.store(in: &cb)
+
+        await core.startEmulation(program)
+        //try await Task.sleep(nanoseconds: 1_000_000_000) // Sleep for 1 second
         
-        let emuTask = Task {
-            await core.emulate(program)
-        }
+        await core.onKeyDown(.One)
         
-        try await Task.sleep(nanoseconds: 1_000_000_000) // Sleep for 1 second
-        XCTAssertEqual(false, emuTask.isCancelled)
+        await core.stop()
         
-        
-        Task { // Simulate calling from the main thread of the frontend app
-            core.onKeyDown(.One)
-        }
-        
-        let res = await emuTask.result
-        XCTAssertNoThrow(try? res.get()) // Finished and did not throw the error outside (invalid operation caught in the core)
-//        core.onKeyDown(key: .A)
-//        core.onKeyDown(key: .A)
-//        core.onKeyUp(key: .A)
         
     }
     

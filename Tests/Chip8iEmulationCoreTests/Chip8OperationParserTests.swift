@@ -64,7 +64,7 @@ final class Chip8OperationParserTests: XCTestCase {
             
             let expectedOperationCode = parser.encode(expectedOperation)
             XCTAssertEqual(expectedOperationCode, opCode,
-                           "Expected operation code \(expectedOperation) did not match the original machine code \(opCode).")
+                    "Expected operation code \(expectedOperation) did not match the original machine code \(opCode).")
             
             let decodedOperation = parser.decode(opCode)
 
